@@ -11,6 +11,7 @@ const productSchema = new mongoose.Schema({
   providerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   name: { type: String, required: true },
   category: { type: String, required: true },
+  subCategory: { type: String, required: false },
   brand: { type: String, required: true },
   model: { type: String, required: true },
   specifications: { type: Map, of: String },
@@ -28,7 +29,7 @@ const productSchema = new mongoose.Schema({
   
   accessories: [accessorySchema],
   
-  location: { type: String, required: true, default: 'New York' },
+  location: { type: String, required: true, default: 'Chennai' },
   
   // Equipora Digital Trust Passport Fields
   verificationStatus: { 

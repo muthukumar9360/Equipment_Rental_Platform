@@ -1,20 +1,30 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import RecentActivity from '../components/RecentActivity';
-import FeaturedCategories from '../components/FeaturedCategories';
-import QuickCategories from '../components/QuickCategories';
-import HeroShowcase from '../components/HeroShowcase';
-import ExploreSections from '../components/ExploreSections';
-import LocationsAndSearches from '../components/LocationsAndSearches';
-import CategoryShowcase from '../components/CategoryShowcase';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
-const Marketplace = () => {
-  const navigate = useNavigate();
+const ProductsPage = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSubCategory, setSelectedSubCategory] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryParams = new URLSearchParams(location.search);
+  const initialSearch = queryParams.get('search') || '';
+  const initialCategory = queryParams.get('category') || '';
+  const initialSubCategory = queryParams.get('subCategory') || '';
+
+  const initialMaxPrice = Number(queryParams.get('maxPrice')) || 1000;
+  const initialMinTrustScore = Number(queryParams.get('minTrustScore')) || 0;
+  const initialMinConditionScore = Number(queryParams.get('minConditionScore')) || 0;
+  const initialBrand = queryParams.get('brand') || '';
+  const initialVerification = queryParams.get('verification') || '';
+  const initialLocation = queryParams.get('location') || '';
+
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState(initialSearch);
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedSubCategory, setSelectedSubCategory] = useState(initialSubCategory);
+  const [selectedLocation, setSelectedLocation] = useState(initialLocation);
   
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isSubCategoryOpen, setIsSubCategoryOpen] = useState(false);
@@ -24,46 +34,25 @@ const Marketplace = () => {
   const [isModalBrandOpen, setIsModalBrandOpen] = useState(false);
   const [isModalStatusOpen, setIsModalStatusOpen] = useState(false);
 
-  const [maxPrice, setMaxPrice] = useState(1000);
-  const [minTrustScore, setMinTrustScore] = useState(0);
-  const [minConditionScore, setMinConditionScore] = useState(0);
-  const [selectedBrand, setSelectedBrand] = useState('');
-  const [verificationStatus, setVerificationStatus] = useState('');
+  const [maxPrice, setMaxPrice] = useState(initialMaxPrice);
+  const [minTrustScore, setMinTrustScore] = useState(initialMinTrustScore);
+  const [minConditionScore, setMinConditionScore] = useState(initialMinConditionScore);
+  const [selectedBrand, setSelectedBrand] = useState(initialBrand);
+  const [verificationStatus, setVerificationStatus] = useState(initialVerification);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
+  
+  const [tempMaxPrice, setTempMaxPrice] = useState(initialMaxPrice);
+  const [tempMinTrustScore, setTempMinTrustScore] = useState(initialMinTrustScore);
+  const [tempMinConditionScore, setTempMinConditionScore] = useState(initialMinConditionScore);
+  const [tempSelectedBrand, setTempSelectedBrand] = useState(initialBrand);
+  const [tempVerificationStatus, setTempVerificationStatus] = useState(initialVerification);
 
-  const [tempMaxPrice, setTempMaxPrice] = useState(10000);
-  const [tempMinTrustScore, setTempMinTrustScore] = useState(0);
-  const [tempMinConditionScore, setTempMinConditionScore] = useState(0);
-  const [tempSelectedBrand, setTempSelectedBrand] = useState('');
-  const [tempVerificationStatus, setTempVerificationStatus] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
-  // Hardcoded for now to match UI
-  const categories = ["Cameras", "Drones", "Audio Gear", "Power Tools", "Lighting", "Vehicles"];
-  const brands = ["Sony", "Canon", "DJI", "DeWalt", "Makita", "Rode", "Shure"];
-  const subCategoriesMap = {
-    "Cameras": ["DSLR", "Mirrorless", "Cinema", "Action Cams", "360 Cameras"],
-    "Drones": ["Photography", "FPV Racing", "Enterprise", "Underwater"],
-    "Audio Gear": ["Microphones", "Mixers", "Speakers", "Recorders"],
-    "Power Tools": ["Drills", "Saws", "Generators", "Sanders", "Compressors"],
-    "Lighting": ["Continuous", "Strobes", "Modifiers", "Stands"],
-    "Vehicles": ["Vans", "Trucks", "Trailers", "ATVs"]
-  };
-  const locations = [
-    "Tirunelveli - Sankarnagar", "Tirunelveli - Karungulam", "Tirunelveli - Palayamkottai", "Tirunelveli - Town",
-    "Chennai - Anna Nagar", "Chennai - T Nagar", "Chennai - Velachery",
-    "Madurai - K.K. Nagar", "Madurai - Anna Nagar",
-    "Coimbatore - Gandhipuram", "Coimbatore - RS Puram",
-    "Trichy - Srirangam", "Trichy - Thillai Nagar"
-  ];
-
-  const groupedLocations = locations.reduce((acc, loc) => {
-    const [district, area] = loc.split(' - ');
-    if (district && area) {
-      if (!acc[district]) acc[district] = [];
-      acc[district].push({ full: loc, area });
-    }
-    return acc;
-  }, {});
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [appliedSearchTerm, selectedCategory, selectedSubCategory, selectedLocation, maxPrice, minTrustScore, minConditionScore, selectedBrand, verificationStatus]);
 
   const openFilters = () => {
     setTempMaxPrice(maxPrice);
@@ -84,24 +73,92 @@ const Marketplace = () => {
   };
 
   const handleSearch = () => {
-    const params = new URLSearchParams();
-    if (searchTerm) params.append('search', searchTerm);
-    if (selectedCategory) params.append('category', selectedCategory);
-    if (selectedSubCategory) params.append('subCategory', selectedSubCategory);
-    if (selectedLocation) params.append('location', selectedLocation);
-    if (maxPrice < 1000) params.append('maxPrice', maxPrice);
-    if (minTrustScore > 0) params.append('minTrustScore', minTrustScore);
-    if (minConditionScore > 0) params.append('minConditionScore', minConditionScore);
-    if (selectedBrand) params.append('brand', selectedBrand);
-    if (verificationStatus) params.append('verification', verificationStatus);
-    
-    navigate(`/equipment?${params.toString()}`);
+    setAppliedSearchTerm(searchTerm);
+    // You can optionally update the URL here to make it shareable
   };
 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const { data } = await api.get('/products');
+        setProducts(data);
+      } catch (error) {
+        console.error('Error fetching products', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  if (loading) return <div className="text-center py-20 text-gray-500">Loading equipment...</div>;
+
+  const categories = [...new Set(products.map(p => p.category))].sort();
+  const locations = [...new Set(products.map(p => p.location).filter(Boolean))].sort();
+  const groupedLocations = locations.reduce((acc, loc) => {
+    const [district, area] = loc.split(' - ');
+    if (district && area) {
+      if (!acc[district]) acc[district] = [];
+      acc[district].push({ full: loc, area });
+    }
+    return acc;
+  }, {});
+  const brands = [...new Set(products.map(p => p.brand).filter(Boolean))].sort();
+
+  const subCategoriesMap = {
+    "Cameras": ["DSLR", "Mirrorless", "Cinema", "Action Cams", "360 Cameras"],
+    "Drones": ["Photography", "FPV Racing", "Enterprise", "Underwater"],
+    "Audio Gear": ["Microphones", "Mixers", "Speakers", "Recorders"],
+    "Power Tools": ["Drills", "Saws", "Generators", "Sanders", "Compressors"],
+    "Lighting": ["Continuous", "Strobes", "Modifiers", "Stands"],
+    "Vehicles": ["Vans", "Trucks", "Trailers", "ATVs"]
+  };
+
+  const filteredProducts = products.filter(product => {
+    const searchLower = appliedSearchTerm.toLowerCase();
+    const matchesSearch = (product.name?.toLowerCase() || '').includes(searchLower) || 
+                          (product.brand?.toLowerCase() || '').includes(searchLower);
+    const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
+    const matchesSubCategory = selectedSubCategory ? product.subCategory === selectedSubCategory : true;
+    const matchesLocation = selectedLocation ? product.location === selectedLocation : true;
+    const matchesPrice = product.pricePerDay <= maxPrice;
+    const matchesTrust = product.trustScore >= minTrustScore;
+    const matchesCondition = product.conditionScore >= minConditionScore;
+    const matchesBrand = selectedBrand ? product.brand === selectedBrand : true;
+    const matchesVerification = verificationStatus ? product.verificationStatus === verificationStatus : true;
+    
+    return matchesSearch && matchesCategory && matchesSubCategory && matchesLocation && matchesPrice && 
+           matchesTrust && matchesCondition && matchesBrand && matchesVerification;
+  });
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const currentProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
-    <div className="pb-0">
-      {/* Search Bar Section */}
-      <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col lg:flex-row gap-4 justify-between items-center z-40 relative border border-black">
+    <div className="pb-10 relative">
+      <div className="flex items-center mb-8 relative">
+        {/* Back Button */}
+        <button 
+          onClick={() => navigate(-1)} 
+          className="hidden md:flex absolute left-0 group items-center space-x-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer z-10"
+        >
+          <svg className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>Back</span>
+        </button>
+
+        <div className="w-full text-center">
+          <h2 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl mb-4">
+            Available Equipment
+          </h2>
+          <p className="text-xl text-black max-w-2xl mx-auto">
+            Find exactly what you need from our verified providers.
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-8 bg-white p-5 rounded-xl shadow-sm flex flex-col lg:flex-row gap-4 justify-between items-center z-40 relative border border-black">
         <div className="w-full lg:flex-1 relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
@@ -285,18 +342,120 @@ const Marketplace = () => {
         </div>
       </div>
 
-      <div className="text-center mt-6 mb-6">
-        <h2 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl mb-4">
-          Trust-First Equipment Rental
-        </h2>
-        <p className="text-lg text-blue-500 max-w-2xl mx-auto">
-          Rent high-quality gear with confidence. Verified users, guaranteed condition, and secure process.
-        </p>
+      <div className="mb-4 flex justify-between items-end border-b border-gray-100 pb-2 mt-10">
+        <div>
+          <h3 className="text-2xl font-bold text-gray-900">Equipment Catalog</h3>
+          <p className="text-gray-500">Showing {currentProducts.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} - {Math.min(currentPage * itemsPerPage, filteredProducts.length)} of {filteredProducts.length} items</p>
+        </div>
       </div>
+
+      {filteredProducts.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
+          <p className="text-gray-500 text-lg">No equipment matches your search criteria.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
+          {currentProducts.map(product => (
+            <Link key={product._id} to={`/products/${product._id}`} className="relative group block rounded-[28px] p-[3px] bg-white hover:bg-gradient-to-br hover:from-blue-500 hover:via-purple-500 hover:to-indigo-600 transition-all duration-500 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer overflow-hidden">
+              <div className="bg-white rounded-[25px] overflow-hidden flex flex-col sm:flex-row h-full w-full relative z-10 border border-gray-100 group-hover:border-transparent transition-colors duration-300">
+                {/* Image Section - Left */}
+                <div className="w-full sm:w-[45%] shrink-0 overflow-hidden bg-gray-100 relative min-h-[220px]">
+                  {/* Floating Badges */}
+                  <div className="absolute top-3 left-3 z-10 flex flex-col items-start gap-1.5">
+                    <span className="px-3 py-1 rounded-full text-[11px] font-black text-gray-900 shadow-lg backdrop-blur-md bg-white/90 uppercase tracking-wide border border-white/40">
+                      {product.category}
+                    </span>
+                  </div>
+                  
+                  <img 
+                    src={product.images?.[0] || 'https://via.placeholder.com/600x400?text=No+Image'} 
+                    alt={product.name}
+                    className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
+                  />
+                  
+                  {/* Verified Badge over image */}
+                  {product.verificationStatus === 'Verified' && (
+                    <div className="absolute bottom-3 left-3 bg-blue-600 text-white rounded-full p-1.5 shadow-lg shadow-blue-600/30">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Details Section - Right */}
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-xl font-extrabold text-gray-900 leading-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
+                      {product.name}
+                    </h4>
+                    <p className="text-xs font-bold text-gray-400 mt-1 uppercase tracking-widest">{product.brand || 'Premium Equipment'}</p>
+                    
+                    <div className="flex flex-wrap items-center gap-2 mt-4">
+                      <div className="flex items-center px-2 py-1 bg-green-50 rounded-lg text-xs font-bold text-green-700 border border-green-100">
+                        <div className="w-2 h-2 rounded-full bg-green-500 mr-1.5 animate-pulse"></div>
+                        Trust {product.trustScore}
+                      </div>
+                      <span className="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded-lg border border-gray-100">
+                        Cond. {product.conditionScore}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 pt-4 border-t border-gray-100 flex items-end justify-between">
+                    <div>
+                      <span className="text-3xl font-black text-gray-900 tracking-tight">₹{product.pricePerDay}</span>
+                      <span className="text-xs font-bold text-gray-400 ml-1 uppercase tracking-wider">/day</span>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 group-hover:bg-blue-600 group-hover:border-blue-600 group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-[0_4px_15px_rgba(37,99,235,0.4)]">
+                      <svg className="w-5 h-5 transform group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="mt-12 flex justify-center items-center space-x-2">
+          <button 
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Previous
+          </button>
+          
+          <div className="flex space-x-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center font-medium transition-colors ${
+                  currentPage === page 
+                    ? 'bg-blue-600 text-white shadow-md' 
+                    : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+
+          <button 
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {/* More Filters Modal */}
       {showFiltersModal && (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80">
               <h3 className="text-xl font-bold text-gray-900">Advanced Filters</h3>
@@ -306,6 +465,7 @@ const Marketplace = () => {
             </div>
             
             <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              {/* Brand and Verification */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-50">
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
@@ -374,6 +534,7 @@ const Marketplace = () => {
                 </div>
               </div>
 
+              {/* Price Slider */}
               <div>
                 <div className="flex justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">Max Price Per Day</label>
@@ -386,6 +547,7 @@ const Marketplace = () => {
                 />
               </div>
 
+              {/* Trust Score Slider */}
               <div>
                 <div className="flex justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">Minimum Trust Score</label>
@@ -398,6 +560,7 @@ const Marketplace = () => {
                 />
               </div>
               
+              {/* Condition Score Slider */}
               <div>
                 <div className="flex justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">Minimum Condition Score</label>
@@ -429,21 +592,8 @@ const Marketplace = () => {
         </div>
       )}
 
-      <HeroShowcase />
-
-      <FeaturedCategories onSelectCategory={(cat) => navigate(`/equipment?category=${encodeURIComponent(cat)}`)} />
-
-      <CategoryShowcase />
-
-      <QuickCategories />
-
-      <RecentActivity />
-
-      <LocationsAndSearches />
-
-      <ExploreSections />
     </div>
   );
 };
 
-export default Marketplace;
+export default ProductsPage;

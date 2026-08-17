@@ -4,7 +4,7 @@ const activities = [
   {
     id: 1,
     title: 'Sony A7III Rented',
-    location: 'New York',
+    location: 'Chennai',
     user: 'Alex M.',
     avatar: 'https://i.pravatar.cc/150?u=alex',
     rating: 5,

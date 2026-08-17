@@ -105,7 +105,7 @@ const ExploreSections = () => {
         <h2 className="text-2xl font-extrabold mb-4 text-gray-900 border-b border-gray-200 inline-block">Popular Categories</h2>
 
         {/* Tabs - Scrollable horizontally */}
-        <div className="overflow-x-auto whitespace-nowrap mb-3 pb-2 hide-scrollbar">
+        <div className="overflow-x-auto whitespace-nowrap mb-3 pb-2">
           <div className="inline-flex gap-3">
             {categoryTabs.map((tab) => (
               <button

@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Marketplace from './pages/Marketplace';
+import ProductsPage from './pages/ProductsPage';
 import ProductDetails from './pages/ProductDetails';
 import Footer from './components/Footer';
 
@@ -21,7 +22,8 @@ function App() {
           <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <h1 className="text-2xl font-bold text-primary"><Link to="/">Equipora</Link></h1>
             <nav className="space-x-4">
-              <Link to="/" className="text-gray-600 hover:text-primary transition-colors">Marketplace</Link>
+              <Link to="/" className="text-gray-600 hover:text-primary transition-colors font-medium">Home</Link>
+              <Link to="/equipment" className="text-gray-600 hover:text-primary transition-colors font-medium">Browse</Link>
               {user ? (
                 <>
                   <Link to="/dashboard" className="text-gray-600 hover:text-primary transition-colors">Dashboard</Link>
@@ -40,6 +42,7 @@ function App() {
         <main className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-0">
           <Routes>
             <Route path="/" element={<Marketplace />} />
+            <Route path="/equipment" element={<ProductsPage />} />
             <Route path="/products/:id" element={<ProductDetails />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

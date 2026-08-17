@@ -73,14 +73,14 @@ const LocationsAndSearches = () => {
   const scrollRef = useRef(null);
 
   const rentalLocations = [
-    { city: 'New York', imageUrl: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=200&q=80' },
-    { city: 'Los Angeles', imageUrl: 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=200&q=80' },
-    { city: 'Chicago', imageUrl: 'https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=200&q=80' },
-    { city: 'Houston', imageUrl: 'https://images.unsplash.com/photo-1531218150217-5afc463f2538?auto=format&fit=crop&w=200&q=80' },
-    { city: 'Phoenix', imageUrl: 'https://images.unsplash.com/photo-1513251703273-db987b50875e?auto=format&fit=crop&w=200&q=80' },
-    { city: 'Miami', imageUrl: 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=200&q=80' },
-    { city: 'Atlanta', imageUrl: 'https://images.unsplash.com/photo-1533758277259-2162a87474a0?auto=format&fit=crop&w=200&q=80' },
-    { city: 'Seattle', imageUrl: 'https://images.unsplash.com/photo-1502175353174-a7a70e73b362?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Chennai', imageUrl: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Coimbatore', imageUrl: 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Madurai', imageUrl: 'https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Trichy', imageUrl: 'https://images.unsplash.com/photo-1531218150217-5afc463f2538?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Salem', imageUrl: 'https://images.unsplash.com/photo-1513251703273-db987b50875e?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Tirunelveli', imageUrl: 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Erode', imageUrl: 'https://images.unsplash.com/photo-1533758277259-2162a87474a0?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Vellore', imageUrl: 'https://images.unsplash.com/photo-1502175353174-a7a70e73b362?auto=format&fit=crop&w=200&q=80' },
   ];
 
   const popularSearches = [

@@ -33,12 +33,22 @@ const FeaturedCategories = ({ onSelectCategory }) => {
         <div>
           <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight">Explore Popular Categories <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded ml-2 align-middle">NEW</span></h3>
         </div>
-        <button 
-          onClick={() => setShowAllCategories(true)}
-          className="px-6 py-2.5 bg-white text-black font-bold rounded-full hover:bg-white hover:text-black transition-all shadow-sm border border-black"
-        >
-          View All
-        </button>
+        <div className="relative group inline-block">
+          {/* Animated Glowing Aura */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 rounded-full blur opacity-40 group-hover:opacity-100 animate-pulse transition duration-500"></div>
+          
+          <button 
+            onClick={() => setShowAllCategories(true)}
+            className="relative px-7 py-2.5 bg-white text-gray-900 font-bold rounded-2xl hover:bg-gray-50 transition-all duration-300 cursor-pointer flex items-center shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+          >
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+              View All
+            </span>
+            <span className="ml-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+              <svg className="w-3 h-3 transform group-hover:translate-x-0.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+            </span>
+          </button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
