@@ -6,18 +6,17 @@ import ProductQuickViewModal from '../components/ProductQuickViewModal';
 const ProviderPreview = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [product, setProduct] = useState(null);
+  const [baseProduct, setBaseProduct] = useState(null);
+  const [allProviders, setAllProviders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPreview, setSelectedPreview] = useState(null);
 
   useEffect(() => {
-    // Force white background for this page globally
     const outerContainer = document.querySelector('.bg-light');
     if (outerContainer) {
       outerContainer.classList.remove('bg-light');
       outerContainer.classList.add('bg-white');
     }
-    
     return () => {
       if (outerContainer) {
         outerContainer.classList.add('bg-light');
@@ -27,30 +26,33 @@ const ProviderPreview = () => {
   }, []);
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchProductAndAlternatives = async () => {
       try {
+        // 1. Fetch the specific product that was clicked
         const { data } = await api.get(`/products/${id}`);
-        setProduct(data);
+        setBaseProduct(data);
+        
+        // 2. Fetch all products with the same brand & model to list all authors
+        if (data.brand && data.model) {
+          const altRes = await api.get(`/products?brand=${encodeURIComponent(data.brand)}&model=${encodeURIComponent(data.model)}`);
+          setAllProviders(altRes.data);
+        }
       } catch (error) {
         console.error('Error fetching product details', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchProduct();
+    fetchProductAndAlternatives();
   }, [id]);
 
-  if (loading) return <div className="min-h-screen bg-white flex items-center justify-center text-gray-500 font-medium">Loading Provider Profile...</div>;
-  if (!product) return <div className="min-h-screen bg-white flex items-center justify-center text-gray-500 font-medium">Profile not found.</div>;
-
-  const providerName = product.providerId?.name || 'Verified Provider';
-  const providerInitials = providerName.charAt(0).toUpperCase();
+  if (loading) return <div className="min-h-screen bg-white flex items-center justify-center text-gray-500 font-medium">Loading Product Hub...</div>;
+  if (!baseProduct) return <div className="min-h-screen bg-white flex items-center justify-center text-gray-500 font-medium">Product not found.</div>;
 
   return (
-    <div className="min-h-screen bg-white font-sans pt-6 pb-20 animate-fade-in relative">
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white font-sans pb-5 animate-fade-in relative">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-4">
         
-        {/* Top Navbar / Back Button Area */}
         <div className="mb-6">
           <button 
             onClick={() => navigate(-1)}
@@ -61,149 +63,115 @@ const ProviderPreview = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pt-2">
           
-          {/* LEFT SIDE (Sticky Hero Section) */}
+          {/* LEFT SIDE (Product Focus) */}
           <div className="lg:col-span-5 relative">
             <div className="sticky top-28">
               
-              {/* Hero Image */}
               <div className="w-full h-[400px] rounded-[32px] overflow-hidden shadow-sm relative bg-gray-100">
                 <img 
-                  src={product.images?.[0] || 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=1200&q=80'} 
-                  alt={product.name} 
+                  src={baseProduct.images?.[0] || 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=1200&q=80'} 
+                  alt={baseProduct.name} 
                   className="w-full h-full object-cover"
                 />
               </div>
 
-              {/* Overlapping Avatar */}
-              <div className="flex justify-center -mt-12 relative z-10">
-                <div className="w-24 h-24 bg-blue-600 rounded-full border-4 border-white shadow-xl flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
-                  {/* If they had an avatar URL we'd show it here, for now initials */}
-                  {providerInitials}
-                </div>
-              </div>
-
-              {/* Title & Stats */}
-              <div className="text-center mt-6">
+              <div className="text-center mt-8">
                 <h1 className="text-4xl font-black text-gray-900 tracking-tight leading-tight">
-                  {product.name}
+                  {baseProduct.brand} {baseProduct.model}
                 </h1>
-                <p className="mt-3 text-gray-600 text-lg">
-                  Provided by <span className="font-bold text-gray-900">{providerName}</span>
+                <p className="mt-4 text-gray-600 text-lg leading-relaxed">
+                  {baseProduct.description}
                 </p>
 
-                <div className="flex items-center justify-center space-x-4 mt-4 text-sm font-bold text-gray-700">
-                  <div className="flex items-center">
-                    <svg className="w-4 h-4 text-gray-900 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                    <span>{product.trustScore / 20} Trust Rating</span>
+                <div className="mt-8 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                  <h3 className="font-bold text-gray-900 mb-4 text-left">Equipment Specifications</h3>
+                  <div className="grid grid-cols-2 gap-4 text-left">
+                    <div>
+                      <p className="text-xs text-gray-500 font-bold uppercase">Brand</p>
+                      <p className="font-semibold text-gray-900">{baseProduct.brand}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 font-bold uppercase">Category</p>
+                      <p className="font-semibold text-gray-900">{baseProduct.category}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 font-bold uppercase">Sub-Category</p>
+                      <p className="font-semibold text-gray-900">{baseProduct.subCategory}</p>
+                    </div>
                   </div>
-                  <span>·</span>
-                  <span className="underline cursor-pointer">{product.location}</span>
                 </div>
               </div>
 
             </div>
           </div>
 
-          {/* RIGHT SIDE (Scrollable Details) */}
-          <div className="lg:col-span-7 mt-12 lg:mt-0 space-y-12 pl-0 lg:pl-10">
+          {/* RIGHT SIDE (Compare Providers) */}
+          <div className="lg:col-span-7 mt-12 lg:mt-0 space-y-6 pl-0 lg:pl-10">
             
-            {/* PACKAGES / OFFERINGS */}
             <div>
-              <h2 className="text-2xl font-extrabold text-gray-900 mb-6">Available Equipment Package</h2>
+              <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Compare Providers</h2>
+              <p className="text-gray-500 text-lg mb-8">Select from multiple verified authors offering this exact equipment.</p>
               
-              <div className="bg-white border border-gray-200 rounded-[24px] p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row gap-6">
-                <div className="w-full md:w-[200px] h-[140px] rounded-2xl overflow-hidden shrink-0 bg-gray-100">
-                  <img src={product.images?.[0] || 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=600&q=80'} className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">{product.brand} {product.model}</h3>
-                    <p className="text-gray-500 mt-2 text-sm line-clamp-2 leading-relaxed">
-                      {product.description || "In this package you get the complete equipment set carefully maintained and ready for immediate usage."}
-                    </p>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between">
-                    <div>
-                      <span className="font-extrabold text-gray-900">₹{product.pricePerDay}</span>
-                      <span className="text-gray-500 text-xs ml-1">/ day</span>
-                      <span className="text-gray-400 text-xs mx-2">·</span>
-                      <span className="text-gray-500 text-xs">Security: ₹{product.securityDeposit}</span>
-                    </div>
-                    <button onClick={() => setIsModalOpen(true)} className="px-5 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg hover:bg-black transition-colors">
-                      View Preview
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <hr className="border-gray-200" />
-
-            {/* QUALIFICATIONS / TRUST */}
-            <div>
-              <h2 className="text-2xl font-extrabold text-gray-900 mb-8">Provider qualifications</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Left Card */}
-                <div className="bg-gray-50 rounded-[24px] p-6 border border-gray-100 flex flex-col items-center justify-center text-center">
-                  <div className="w-20 h-20 bg-blue-600 rounded-full border-4 border-white shadow-md flex items-center justify-center text-white text-2xl font-bold mb-4">
-                    {providerInitials}
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">{providerName}</h3>
-                  <p className="text-gray-500 text-sm mt-1">Equipora Verified Provider</p>
+              <div className="space-y-6">
+                {allProviders.map(providerProduct => {
+                  const author = providerProduct.providerId;
+                  const initials = author?.name?.charAt(0).toUpperCase() || 'U';
                   
-                  <button onClick={() => setIsModalOpen(true)} className="mt-6 w-full py-3 bg-white border border-gray-300 rounded-xl text-gray-900 font-bold hover:bg-gray-50 transition-colors">
-                    Message {providerName}
-                  </button>
-                  <p className="text-xs text-gray-400 mt-3 max-w-[200px]">
-                    To protect your payment, always communicate and pay through Equipora.
-                  </p>
-                </div>
-
-                {/* Right Points */}
-                <div className="space-y-6 flex flex-col justify-center">
-                  
-                  <div className="flex">
-                    <div className="shrink-0 mr-4 mt-1">
-                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                  return (
+                    <div 
+                      key={providerProduct._id} 
+                      className="group bg-white border-4 border-gray-100 hover:border-blue-400 rounded-[24px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.15)] transition-all duration-500 transform hover:-translate-y-2 flex flex-col sm:flex-row gap-6 cursor-pointer"
+                      onClick={(e) => {
+                        setSelectedPreview(providerProduct);
+                      }}
+                    >
+                      
+                      {/* Product Thumbnail */}
+                      <div className="w-full sm:w-[140px] h-[140px] rounded-2xl overflow-hidden shrink-0 bg-gray-100 relative">
+                        <img src={providerProduct.images?.[0] || 'https://via.placeholder.com/400'} className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out" />
+                      </div>
+                      
+                      <div className="flex-1 flex flex-col justify-between">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 text-xl font-black shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                              {initials}
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-0.5">Hosted By</p>
+                              <h3 className="text-lg font-extrabold text-gray-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">{author?.name || 'Unknown'}</h3>
+                            </div>
+                          </div>
+                          <div className="bg-green-50 px-3 py-1 rounded-xl border border-green-100 flex items-center">
+                            <div className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></div>
+                            <span className="text-green-700 font-bold text-xs uppercase tracking-wider">{providerProduct.trustScore} Trust</span>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-4 flex flex-col sm:flex-row sm:items-end justify-between border-t border-gray-50 pt-4">
+                          <div>
+                            <p className="text-xs font-bold text-gray-400 mb-1 flex items-center uppercase tracking-widest">
+                              <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                              {providerProduct.location.split(' - ')[0]}
+                            </p>
+                            <div className="flex items-end">
+                              <span className="font-black text-3xl text-gray-900 tracking-tight">₹{providerProduct.pricePerDay}</span>
+                              <span className="text-gray-400 text-xs font-bold ml-1 uppercase tracking-wider mb-1.5">/ day</span>
+                            </div>
+                          </div>
+                          
+                          <button 
+                            className="mt-4 sm:mt-0 px-6 py-3 bg-gray-50 text-gray-600 border border-gray-200 text-sm font-extrabold rounded-xl group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 group-hover:shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300"
+                          >
+                            View Preview
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900">Verified Identity</h4>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {product.providerId?.kycStatus === 'ACTIVE' 
-                          ? 'This provider has passed the rigorous manual Equipora KYC review process.' 
-                          : 'This provider has completed the basic Equipora verification process.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex">
-                    <div className="shrink-0 mr-4 mt-1">
-                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900">Exceptional Trust Score</h4>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Maintains an active trust score of {product.providerId?.trustScore || 100} out of 100 on the platform.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex">
-                    <div className="shrink-0 mr-4 mt-1">
-                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900">Equipment Expert</h4>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Offers high quality, well-maintained {product.category.toLowerCase()} equipment.
-                      </p>
-                    </div>
-                  </div>
-
-                </div>
+                  )
+                })}
               </div>
             </div>
 
@@ -211,20 +179,10 @@ const ProviderPreview = () => {
         </div>
       </div>
       
-      {/* Mobile Sticky Booking Footer */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex items-center justify-between z-50">
-        <div>
-          <span className="text-lg font-extrabold text-gray-900">₹{product.pricePerDay}</span>
-          <span className="text-gray-500 text-xs ml-1">/ day</span>
-        </div>
-        <button onClick={() => setIsModalOpen(true)} className="px-6 py-3 bg-[#e61e4d] text-white font-bold rounded-xl hover:bg-[#d71946]">
-          Show dates
-        </button>
-      </div>
       <ProductQuickViewModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        product={product} 
+        isOpen={!!selectedPreview}
+        onClose={() => setSelectedPreview(null)}
+        product={selectedPreview}
       />
     </div>
   );

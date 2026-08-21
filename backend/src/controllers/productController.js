@@ -66,8 +66,16 @@ const createProduct = async (req, res) => {
 // @route   GET /api/products
 const getProducts = async (req, res) => {
   try {
-    // Only return verified products for public marketplace
-    const products = await Product.find({ verificationStatus: 'Verified' }).populate('providerId', 'name trustScore');
+    const { brand, model, excludeId, category, subCategory } = req.query;
+    let query = { verificationStatus: 'Verified' };
+    
+    if (brand) query.brand = brand;
+    if (model) query.model = model;
+    if (category) query.category = category;
+    if (subCategory) query.subCategory = subCategory;
+    if (excludeId) query._id = { $ne: excludeId };
+
+    const products = await Product.find(query).populate('providerId', 'name trustScore');
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });

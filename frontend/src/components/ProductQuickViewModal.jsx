@@ -67,7 +67,7 @@ const ProductQuickViewModal = ({ isOpen, onClose, product }) => {
         </div>
 
         {/* Modal White Box Content */}
-        <div className="flex-1 bg-white rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.08)] overflow-hidden flex flex-col md:flex-row relative">
+        <div className="flex-1 bg-white rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.08)] overflow-hidden flex flex-col md:flex-row relative border border-black">
           
           {/* Close Button */}
           <button 
@@ -89,7 +89,21 @@ const ProductQuickViewModal = ({ isOpen, onClose, product }) => {
           </div>
 
           {/* RIGHT SIDE: Details */}
-          <div className="w-full md:w-[50%] p-8 flex flex-col justify-center bg-white overflow-y-auto">
+          <div className="w-full md:w-[50%] pt-10 p-4 flex flex-col justify-center bg-white overflow-y-auto">
+            
+          {/* Author Details Section */}
+          <div className="flex items-center space-x-3 mb-4 pb-6 border-b border-gray-100">
+            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 text-xl font-black shadow-inner">
+              {product.providerId?.name?.charAt(0).toUpperCase() || 'U'}
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-0.5">Hosted By</p>
+              <h3 className="text-lg font-extrabold text-gray-900">{product.providerId?.name || 'Verified Provider'}</h3>
+            </div>
+            <div className="ml-auto bg-green-50 px-3 py-1.5 rounded-xl border border-green-100 flex items-center">
+            </div>
+          </div>
+
           <h2 className="text-3xl font-extrabold text-gray-900 leading-tight mb-2">
             {product.name}
           </h2>
@@ -106,7 +120,7 @@ const ProductQuickViewModal = ({ isOpen, onClose, product }) => {
             {product.description || "Turn your project into a success. This high-quality equipment is carefully maintained and ready for your needs. We'll ensure you have everything required to get the job done efficiently and safely. Perfect for professionals and enthusiasts alike."}
           </p>
 
-          <div className="mt-auto flex justify-center">
+          <div className="mt-auto mb-4 flex justify-center">
             <button 
               onClick={handleShowDates}
               className="px-8 py-3 bg-[#e61e4d] text-white font-bold rounded-xl hover:bg-[#d71946] transition-colors shadow-md w-full sm:w-auto"

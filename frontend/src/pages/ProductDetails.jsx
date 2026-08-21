@@ -26,6 +26,7 @@ const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [alternatives, setAlternatives] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   
@@ -57,6 +58,18 @@ const ProductDetails = () => {
       try {
         const { data } = await api.get(`/products/${id}`);
         setProduct(data);
+        
+        // Fetch alternatives
+        if (data.brand && data.model) {
+          try {
+            const altRes = await api.get(`/products?brand=${encodeURIComponent(data.brand)}&model=${encodeURIComponent(data.model)}&excludeId=${data._id}`);
+            setAlternatives(altRes.data);
+          } catch (altErr) {
+            console.error("Error fetching alternatives", altErr);
+          }
+        }
+        
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching product details', error);
       } finally {
@@ -379,6 +392,57 @@ const ProductDetails = () => {
             
           </div>
         </div>
+
+      {/* Alternative Providers Section */}
+      {alternatives.length > 0 && (
+        <div className="max-w-[1400px] mx-auto px-6 py-16">
+          <div className="mb-8">
+            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Other providers offering this equipment</h2>
+            <p className="text-gray-500 mt-2 text-lg">Compare prices and locations for the exact same model from different verified hosts.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {alternatives.map((alt) => (
+              <div 
+                key={alt._id} 
+                className="group bg-white rounded-[2rem] border-4 border-gray-100 hover:border-blue-400 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.15)] transition-all duration-500 transform hover:-translate-y-2 cursor-pointer flex flex-col"
+                onClick={() => {
+                  window.scrollTo(0, 0);
+                  navigate(`/products/${alt._id}`);
+                }}
+              >
+                <div className="h-48 overflow-hidden relative">
+                  <img src={alt.images?.[0] || 'https://via.placeholder.com/400'} alt={alt.name} className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" />
+                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm flex items-center space-x-1">
+                    <span className="text-[#00b050] font-bold text-sm">{alt.trustScore} Trust</span>
+                  </div>
+                </div>
+                <div className="p-6 flex flex-col flex-grow">
+                  <div className="flex items-center space-x-3 mb-4 border-b border-gray-50 pb-4">
+                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-black text-lg shadow-inner group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                      {alt.providerId?.name?.charAt(0) || 'U'}
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-0.5">Hosted By</p>
+                      <p className="font-extrabold text-gray-900 truncate group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">{alt.providerId?.name || 'Unknown Provider'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-auto pt-2 flex items-end justify-between">
+                    <div>
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">Price</p>
+                      <p className="text-3xl font-black text-gray-900 tracking-tight">₹{alt.pricePerDay}<span className="text-xs text-gray-400 font-bold uppercase tracking-wider ml-1">/day</span></p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-1">Location</p>
+                      <p className="font-bold text-gray-800 text-sm truncate max-w-[120px]">{alt.location.split(' - ')[0]}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       </div>
 
