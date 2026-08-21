@@ -435,7 +435,7 @@ const ProductsPage = () => {
       )}
 
       {/* Pagination Controls */}
-      {totalPages > 1 && (
+      {totalPages > 0 && (
         <div className="mt-12 flex justify-center items-center space-x-2">
           <button 
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}

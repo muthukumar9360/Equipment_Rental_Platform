@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const QuickCategories = () => {
+const QuickCategories = ({ products = [] }) => {
+  const navigate = useNavigate();
+  
   const categories = [
     { name: "Cameras", icon: "📷" },
     { name: "Generators", icon: "⚡" },
@@ -32,21 +35,31 @@ const QuickCategories = () => {
         </h3>
         
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-4">
-          {categories.map((cat, i) => (
-            <div
-              key={i}
-              className="group flex flex-col items-center justify-center p-4 rounded-3xl bg-gray-50 hover:bg-gray-900 cursor-pointer transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl border border-black hover:border-gray-800"
-            >
-              <div className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white shadow-sm group-hover:bg-gray-800 transition-colors duration-300 mb-3">
-                <span className="text-2xl group-hover:scale-110 transition-transform duration-300">
-                  {cat.icon}
-                </span>
+          {categories.map((cat, i) => {
+            const count = products.filter(p => p.category === cat.name).length;
+            
+            return (
+              <div
+                key={i}
+                onClick={() => navigate(`/products?category=${encodeURIComponent(cat.name)}`)}
+                className="group flex flex-col items-center justify-center p-4 rounded-3xl bg-gray-50 hover:bg-gray-900 cursor-pointer transition-all duration-300 transform hover:-translate-y-2 hover:shadow-2xl border border-black hover:border-gray-800"
+              >
+                <div className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white shadow-sm group-hover:bg-gray-800 transition-colors duration-300 mb-3">
+                  <span className="text-2xl group-hover:scale-110 transition-transform duration-300">
+                    {cat.icon}
+                  </span>
+                </div>
+                <p className="text-xs font-bold text-gray-700 text-center group-hover:text-white transition-colors duration-300">
+                  {cat.name}
+                </p>
+                {count > 0 && (
+                  <p className="text-[10px] text-gray-400 group-hover:text-gray-300 mt-1 font-semibold">
+                    {count} {count === 1 ? 'item' : 'items'}
+                  </p>
+                )}
               </div>
-              <p className="text-xs font-bold text-gray-700 text-center group-hover:text-white transition-colors duration-300">
-                {cat.name}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import RecentActivity from '../components/RecentActivity';
 import FeaturedCategories from '../components/FeaturedCategories';
 import QuickCategories from '../components/QuickCategories';
@@ -38,6 +39,20 @@ const Marketplace = () => {
   const [tempMinConditionScore, setTempMinConditionScore] = useState(0);
   const [tempSelectedBrand, setTempSelectedBrand] = useState('');
   const [tempVerificationStatus, setTempVerificationStatus] = useState('');
+  
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const { data } = await api.get('/products');
+        setProducts(data);
+      } catch (error) {
+        console.error('Error fetching marketplace products', error);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   // Hardcoded for now to match UI
   const categories = ["Cameras", "Drones", "Audio Gear", "Power Tools", "Lighting", "Vehicles"];
@@ -431,19 +446,19 @@ const Marketplace = () => {
         </div>
       )}
 
-      <HeroShowcase />
+      <HeroShowcase products={products} />
 
       <FeaturedCategories onSelectCategory={(cat) => navigate(`/products?category=${encodeURIComponent(cat)}`)} />
 
       <CategoryShowcase />
 
-      <QuickCategories />
+      <QuickCategories products={products} />
 
-      <RecentActivity />
+      <RecentActivity products={products} />
 
       <EquiporaFeatureShowcases />
 
-      <LocationsAndSearches />
+      <LocationsAndSearches products={products} />
 
       <ExploreSections />
 

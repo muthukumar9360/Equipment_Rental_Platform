@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // --- Top Rental Location Card ---
 const LocationCard = ({ city, imageUrl }) => {
@@ -69,8 +70,9 @@ const PopularSearchCard = ({ title, imageUrl }) => {
 };
 
 // --- Main Component Section ---
-const LocationsAndSearches = () => {
+const LocationsAndSearches = ({ products = [] }) => {
   const scrollRef = useRef(null);
+  const navigate = useNavigate();
 
   const rentalLocations = [
     { city: 'Chennai', imageUrl: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=200&q=80' },
@@ -81,57 +83,80 @@ const LocationsAndSearches = () => {
     { city: 'Tirunelveli', imageUrl: 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=200&q=80' },
     { city: 'Erode', imageUrl: 'https://images.unsplash.com/photo-1533758277259-2162a87474a0?auto=format&fit=crop&w=200&q=80' },
     { city: 'Vellore', imageUrl: 'https://images.unsplash.com/photo-1502175353174-a7a70e73b362?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Tiruppur', imageUrl: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Thoothukudi', imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Thanjavur', imageUrl: 'https://images.unsplash.com/photo-1623860070500-47b2c0f64c67?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Dindigul', imageUrl: 'https://images.unsplash.com/photo-1596422846543-74c6f4c330e7?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Karur', imageUrl: 'https://images.unsplash.com/photo-1506461883276-594a12b11cf3?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Nagercoil', imageUrl: 'https://images.unsplash.com/photo-1570776775619-74d393de520e?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Kanchipuram', imageUrl: 'https://images.unsplash.com/photo-1598463953744-93ff5d8fa2eb?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Kumbakonam', imageUrl: 'https://images.unsplash.com/photo-1593368297610-d02324f6050b?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Rajapalayam', imageUrl: 'https://images.unsplash.com/photo-1534430480872-3498386e7856?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Pudukkottai', imageUrl: 'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Hosur', imageUrl: 'https://images.unsplash.com/photo-1502175353174-a7a70e73b362?auto=format&fit=crop&w=200&q=80' },
+    { city: 'Cuddalore', imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=200&q=80' },
   ];
 
-  const popularSearches = [
-    { title: 'Cinema Cameras', imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=300&q=80' },
-    { title: 'Heavy Duty Tractors', imageUrl: 'https://images.unsplash.com/photo-1592982537447-6f29efc6657c?auto=format&fit=crop&w=300&q=80' },
-    { title: 'Industrial Generators', imageUrl: 'https://images.unsplash.com/photo-1621503798950-c752672ccb64?auto=format&fit=crop&w=300&q=80' },
-    { title: '4K Drones & UAVs', imageUrl: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=300&q=80' },
-    { title: 'Scaffolding Kits', imageUrl: 'https://images.unsplash.com/photo-1541888086225-ee59cb4a5723?auto=format&fit=crop&w=300&q=80' },
-    { title: 'Audio & PA Systems', imageUrl: 'https://images.unsplash.com/photo-1516280440502-629ee921f005?auto=format&fit=crop&w=300&q=80' },
-    { title: 'Party & Event Props', imageUrl: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=300&q=80' },
-    { title: 'Camping & Tents', imageUrl: 'https://images.unsplash.com/photo-1504280390226-f7823527a202?auto=format&fit=crop&w=300&q=80' },
-  ];
+  // Generate top searches dynamically from highest price products
+  const dynamicSearches = products.length > 0 
+    ? [...products].sort((a, b) => b.pricePerDay - a.pricePerDay).slice(0, 8)
+    : [
+        { name: 'Cinema Cameras', images: ['https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=300&q=80'] },
+        { name: 'Heavy Duty Tractors', images: ['https://images.unsplash.com/photo-1592982537447-6f29efc6657c?auto=format&fit=crop&w=300&q=80'] },
+        { name: 'Industrial Generators', images: ['https://images.unsplash.com/photo-1621503798950-c752672ccb64?auto=format&fit=crop&w=300&q=80'] },
+        { name: '4K Drones & UAVs', images: ['https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=300&q=80'] },
+        { name: 'Scaffolding Kits', images: ['https://images.unsplash.com/photo-1541888086225-ee59cb4a5723?auto=format&fit=crop&w=300&q=80'] },
+        { name: 'Audio & PA Systems', images: ['https://images.unsplash.com/photo-1516280440502-629ee921f005?auto=format&fit=crop&w=300&q=80'] },
+        { name: 'Party & Event Props', images: ['https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=300&q=80'] },
+        { name: 'Camping & Tents', images: ['https://images.unsplash.com/photo-1504280390226-f7823527a202?auto=format&fit=crop&w=300&q=80'] }
+      ];
 
-  // Auto-scroll logic for top locations
-  useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
+  // Removed auto-scroll logic as requested. Scrolling is now completely manual.
 
-    let scrollAmount = 0;
-    const scrollStep = 250; 
-    const interval = 2500; 
+  const scrollLeft = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+    }
+  };
 
-    const scrollInterval = setInterval(() => {
-      if (!scrollContainer) return;
-
-      scrollAmount += scrollStep;
-      if (scrollAmount >= scrollContainer.scrollWidth - scrollContainer.clientWidth) {
-        scrollAmount = 0;
-        scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        scrollContainer.scrollTo({ left: scrollAmount, behavior: 'smooth' });
-      }
-    }, interval);
-
-    return () => clearInterval(scrollInterval);
-  }, []);
+  const scrollRight = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  };
 
   return (
     <section className="my-8 max-w-full overflow-hidden">
       
       {/* Top Rental Locations Section */}
       <div className="mb-10 border border-black bg-gray-50 p-6 md:p-8 rounded-3xl shadow-sm relative">
-        <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-6 flex items-center">
-          Top Rental Hubs
-          <span className="bg-red-500 text-white text-[10px] md:text-xs px-2 py-1 rounded ml-3 font-bold uppercase">Trending</span>
-        </h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 flex items-center">
+            Top Rental Hubs
+            <span className="bg-red-500 text-white text-[10px] md:text-xs px-2 py-1 rounded ml-3 font-bold uppercase">Trending</span>
+          </h2>
+          
+          {/* Scroll Arrows */}
+          <div className="flex space-x-2">
+            <button 
+              onClick={scrollLeft}
+              className="w-10 h-10 rounded-full bg-white border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 hover:text-gray-900 shadow-sm transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <button 
+              onClick={scrollRight}
+              className="w-10 h-10 rounded-full bg-white border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 hover:text-gray-900 shadow-sm transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" /></svg>
+            </button>
+          </div>
+        </div>
 
         <div className="relative">
           <div
             ref={scrollRef}
-            className="flex overflow-x-auto hide-scrollbar space-x-5 py-2"
+            className="flex overflow-hidden space-x-7 py-2"
           >
             {rentalLocations.map((place, index) => (
               <LocationCard
@@ -152,12 +177,13 @@ const LocationsAndSearches = () => {
 
         <div className="relative">
           <div className="flex overflow-x-auto space-x-5 py-4 px-2">
-            {popularSearches.map((search, index) => (
-              <PopularSearchCard
-                key={index}
-                title={search.title}
-                imageUrl={search.imageUrl}
-              />
+            {dynamicSearches.map((search, index) => (
+              <div key={search._id || index} onClick={() => search._id && navigate(`/products/${search._id}`)}>
+                <PopularSearchCard
+                  title={search.name}
+                  imageUrl={search.images?.[0] || 'https://via.placeholder.com/400'}
+                />
+              </div>
             ))}
           </div>
         </div>

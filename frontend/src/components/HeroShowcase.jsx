@@ -1,45 +1,51 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-const HeroShowcase = () => {
-  // Image slider data
-  const slides = [
+const HeroShowcase = ({ products = [] }) => {
+  const navigate = useNavigate();
+
+  // Fallback static slides
+  const defaultSlides = [
     {
-      id: 1,
-      title: "Rent Professional Cameras",
-      subtitle: "Capture moments with top-tier gear",
-      rate: "From $12/day",
-      company: "Equipora Verified Providers",
-      image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=80",
-      logo: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=150&q=80",
+      _id: "1",
+      name: "Rent Professional Cameras",
+      category: "Cameras",
+      pricePerDay: 12,
+      providerId: { name: "Equipora Providers" },
+      images: ["https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=80"],
     },
     {
-      id: 2,
-      title: "Construction Equipment",
-      subtitle: "Heavy duty tools for your project",
-      rate: "From $50/day",
-      company: "Equipora Verified Providers",
-      image: "https://images.unsplash.com/photo-1541888086225-ee59cb4a5723?auto=format&fit=crop&w=900&q=80",
-      logo: "https://images.unsplash.com/photo-1541888086225-ee59cb4a5723?auto=format&fit=crop&w=150&q=80",
+      _id: "2",
+      name: "Construction Equipment",
+      category: "Power Tools",
+      pricePerDay: 50,
+      providerId: { name: "Equipora Providers" },
+      images: ["https://images.unsplash.com/photo-1541888086225-ee59cb4a5723?auto=format&fit=crop&w=900&q=80"],
     },
     {
-      id: 3,
-      title: "Agricultural Machinery",
-      subtitle: "Tractors and tillers for rent",
-      rate: "From $35/day",
-      company: "Equipora Verified Providers",
-      image: "https://images.unsplash.com/photo-1592982537447-6f29efc6657c?auto=format&fit=crop&w=900&q=80",
-      logo: "https://images.unsplash.com/photo-1592982537447-6f29efc6657c?auto=format&fit=crop&w=150&q=80",
+      _id: "3",
+      name: "Agricultural Machinery",
+      category: "Vehicles",
+      pricePerDay: 35,
+      providerId: { name: "Equipora Providers" },
+      images: ["https://images.unsplash.com/photo-1592982537447-6f29efc6657c?auto=format&fit=crop&w=900&q=80"],
     },
     {
-      id: 4,
-      title: "Power Generators",
-      subtitle: "Reliable power backup solutions",
-      rate: "From $20/day",
-      company: "Equipora Verified Providers",
-      image: "https://images.unsplash.com/photo-1621503798950-c752672ccb64?auto=format&fit=crop&w=900&q=80",
-      logo: "https://images.unsplash.com/photo-1621503798950-c752672ccb64?auto=format&fit=crop&w=150&q=80",
-    },
+      _id: "4",
+      name: "Power Generators",
+      category: "Power Tools",
+      pricePerDay: 20,
+      providerId: { name: "Equipora Providers" },
+      images: ["https://images.unsplash.com/photo-1621503798950-c752672ccb64?auto=format&fit=crop&w=900&q=80"],
+    }
   ];
+
+  // Use top 4 products by trustScore, or fallback
+  const dynamicSlides = products && products.length > 0 
+    ? [...products].sort((a, b) => (b.trustScore || 0) - (a.trustScore || 0)).slice(0, 4)
+    : defaultSlides;
+
+  const slides = dynamicSlides;
 
   const [current, setCurrent] = useState(0);
   const [active, setActive] = useState(null);
@@ -96,7 +102,7 @@ const HeroShowcase = () => {
         {/* Background image with reduced opacity */}
         <div
           className="absolute inset-0 bg-cover bg-center transition-all duration-500"
-          style={{ backgroundImage: `url(${slides[current].image})` }}
+          style={{ backgroundImage: `url(${slides[current]?.images?.[0] || 'https://via.placeholder.com/900'})` }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
@@ -104,19 +110,21 @@ const HeroShowcase = () => {
         {/* Content (full opacity) */}
         <div className="absolute inset-0 flex flex-col justify-center items-center z-10 p-6 text-center">
           <div className="flex flex-col items-center gap-2 mb-4">
-            <img
-              src={slides[current].logo}
-              alt="logo"
-              className="w-16 h-16 rounded-full border-2 border-white object-cover shadow-md"
-            />
             <h2 className="text-2xl text-white font-extrabold drop-shadow-md">
-              {slides[current].title}
+              {slides[current]?.name}
             </h2>
           </div>
-          <p className="text-gray-200 text-sm drop-shadow-md">{slides[current].subtitle}</p>
-          <p className="text-orange-400 text-xl font-bold mt-2 drop-shadow-md">{slides[current].rate}</p>
-          <p className="text-gray-300 text-xs mb-4 font-medium tracking-wide uppercase drop-shadow-md">{slides[current].company}</p>
-          <button className="bg-orange-500 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-orange-600 shadow-md w-fit transition-colors">
+          <p className="text-gray-200 text-sm drop-shadow-md">Premium {slides[current]?.category} available now</p>
+          <p className="text-orange-400 text-xl font-bold mt-2 drop-shadow-md">₹{slides[current]?.pricePerDay}/day</p>
+          <p className="text-gray-300 text-xs mb-4 font-medium tracking-wide uppercase drop-shadow-md">Provided by {slides[current]?.providerId?.name || 'Verified User'}</p>
+          <button 
+            onClick={() => {
+              if (slides[current]?._id.length > 5) { // Ensure it's a real mongo ID
+                navigate(`/products/${slides[current]._id}`);
+              }
+            }}
+            className="bg-orange-500 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-orange-600 shadow-md w-fit transition-colors"
+          >
             Rent Now →
           </button>
         </div>

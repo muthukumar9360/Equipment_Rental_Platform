@@ -10,6 +10,10 @@ const ProviderPreview = () => {
   const [allProviders, setAllProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPreview, setSelectedPreview] = useState(null);
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
 
   useEffect(() => {
     const outerContainer = document.querySelector('.bg-light');
@@ -48,6 +52,9 @@ const ProviderPreview = () => {
 
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center text-gray-500 font-medium">Loading Product Hub...</div>;
   if (!baseProduct) return <div className="min-h-screen bg-white flex items-center justify-center text-gray-500 font-medium">Product not found.</div>;
+
+  const totalPages = Math.ceil(allProviders.length / itemsPerPage);
+  const currentProviders = allProviders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="min-h-screen bg-white font-sans pb-5 animate-fade-in relative">
@@ -115,14 +122,14 @@ const ProviderPreview = () => {
               <p className="text-gray-500 text-lg mb-8">Select from multiple verified authors offering this exact equipment.</p>
               
               <div className="space-y-6">
-                {allProviders.map(providerProduct => {
+                {currentProviders.map(providerProduct => {
                   const author = providerProduct.providerId;
                   const initials = author?.name?.charAt(0).toUpperCase() || 'U';
                   
                   return (
                     <div 
                       key={providerProduct._id} 
-                      className="group bg-white border-4 border-gray-100 hover:border-blue-400 rounded-[24px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.15)] transition-all duration-500 transform hover:-translate-y-2 flex flex-col sm:flex-row gap-6 cursor-pointer"
+                      className="group bg-white border-4 border-gray-300 hover:border-blue-400 rounded-[24px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.15)] transition-all duration-500 transform hover:-translate-y-2 flex flex-col sm:flex-row gap-6 cursor-pointer"
                       onClick={(e) => {
                         setSelectedPreview(providerProduct);
                       }}
@@ -173,6 +180,43 @@ const ProviderPreview = () => {
                   )
                 })}
               </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 0 && (
+                <div className="mt-8 flex justify-center items-center space-x-2">
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="flex space-x-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center font-medium transition-colors ${
+                          currentPage === page 
+                            ? 'bg-blue-600 text-white shadow-md' 
+                            : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
 
           </div>
