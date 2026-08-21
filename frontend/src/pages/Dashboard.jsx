@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
+import VerificationTimeline from '../components/VerificationTimeline';
 
 const Dashboard = () => {
   const { user, setUser } = useContext(AuthContext);
@@ -59,6 +60,9 @@ const RenterDashboard = ({ user }) => {
 
   return (
     <>
+      <div className="col-span-1 md:col-span-3">
+        <VerificationTimeline kycStatus={user.kycStatus} />
+      </div>
       <div className="col-span-1 md:col-span-1 space-y-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h3 className="text-xl font-semibold mb-4">Identity Verification</h3>
@@ -93,6 +97,9 @@ const RenterDashboard = ({ user }) => {
 const ProviderDashboard = ({ user }) => {
   return (
     <>
+      <div className="col-span-1 md:col-span-3">
+        <VerificationTimeline kycStatus={user.kycStatus} />
+      </div>
       <div className="col-span-1 md:col-span-3">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6 flex justify-between items-center">
           <h3 className="text-xl font-semibold">My Equipment Listings</h3>

@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const OtpRecord = require('../models/OtpRecord');
 const jwt = require('jsonwebtoken');
 
 const generateToken = (res, userId) => {
@@ -14,32 +15,143 @@ const generateToken = (res, userId) => {
   });
 };
 
-// @desc    Register a new user
+// @desc    Check if username is available
+// @route   POST /api/auth/check-username
+const checkUsername = async (req, res) => {
+  try {
+    const { username } = req.body;
+    if (!username) return res.status(400).json({ message: 'Username is required' });
+    
+    const userExists = await User.findOne({ username: username.trim() });
+    res.json({ available: !userExists });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Send OTP
+// @route   POST /api/auth/send-otp
+const sendOtp = async (req, res) => {
+  try {
+    const { identifier } = req.body; // mobile or email
+    if (!identifier) return res.status(400).json({ message: 'Identifier is required' });
+    
+    // Check if identifier is already used by a verified active user
+    const userExists = await User.findOne({ $or: [{ email: identifier }, { phone: identifier }] });
+    if (userExists && userExists.kycStatus === 'ACTIVE') {
+      return res.status(400).json({ message: 'This contact detail is already in use by an active account.' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+    console.log(`[MOCK OTP SERVICE] OTP for ${identifier} is ${otp}`);
+
+    // Store in DB (expires in 10 minutes)
+    await OtpRecord.create({
+      identifier,
+      otpHash: otp, // Pre-save hook will hash this
+      expiresAt: new Date(Date.now() + 10 * 60000)
+    });
+
+    res.json({ message: 'OTP sent successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Verify OTP
+// @route   POST /api/auth/verify-otp
+const verifyOtp = async (req, res) => {
+  try {
+    const { identifier, otp } = req.body;
+    if (!identifier || !otp) return res.status(400).json({ message: 'Identifier and OTP are required' });
+
+    // For dev testing, bypass if OTP is '123456'
+    if (otp === '123456') {
+       return res.json({ message: 'OTP verified successfully' });
+    }
+
+    // Find the latest unexpired OTP for this identifier
+    const otpRecord = await OtpRecord.findOne({ 
+      identifier, 
+      expiresAt: { $gt: new Date() } 
+    }).sort({ createdAt: -1 });
+
+    if (!otpRecord) {
+      return res.status(400).json({ message: 'OTP expired or not found' });
+    }
+
+    if (otpRecord.attempts >= otpRecord.maxAttempts) {
+      return res.status(400).json({ message: 'Maximum verification attempts exceeded. Please request a new OTP.' });
+    }
+
+    const isMatch = await otpRecord.matchOtp(otp);
+    
+    if (isMatch) {
+      // OTP verified successfully
+      // Delete the record to prevent reuse
+      await OtpRecord.deleteOne({ _id: otpRecord._id });
+      res.json({ message: 'OTP verified successfully' });
+    } else {
+      otpRecord.attempts += 1;
+      await otpRecord.save();
+      res.status(400).json({ message: 'Invalid OTP' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Final Registration (Creates User, Saves Files)
 // @route   POST /api/auth/register
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, phone, role } = req.body;
+    const { 
+      username, name, email, phone, password, 
+      dob, gender, state, district, city, line1, pincode,
+      primaryDocumentType 
+    } = req.body;
 
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ $or: [{ email }, { username }] });
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: 'Username or email already exists' });
+    }
+
+    // Generate Equipora ID
+    const equiporaId = 'EQ-USER-' + Math.random().toString(36).substr(2, 4).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+
+    // Map uploaded files
+    const documentUrls = [];
+    if (req.files) {
+      Object.keys(req.files).forEach(fieldName => {
+        req.files[fieldName].forEach(file => {
+          documentUrls.push({
+            docType: fieldName, // e.g., 'aadhaarFront'
+            url: file.path // In local, this is the path in /uploads
+          });
+        });
+      });
     }
 
     const user = await User.create({
-      name,
-      email,
-      password,
-      phone,
-      role: role || 'renter'
+      username, name, email, phone, password,
+      emailVerified: true, // Assuming frontend checked this via OTP
+      mobileVerified: true,
+      role: 'user',
+      dob, gender,
+      address: { state, district, city, line1, pincode },
+      equiporaId,
+      kycStatus: 'PENDING_REVIEW',
+      kycData: {
+        primaryDocumentType,
+        documentUrls
+      }
     });
 
     if (user) {
-      generateToken(res, user._id);
       res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
+        message: 'Application submitted successfully',
+        equiporaId: user.equiporaId,
+        kycStatus: user.kycStatus
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -49,25 +161,40 @@ const registerUser = async (req, res) => {
   }
 };
 
-// @desc    Auth user & get token
+// @desc    Auth user & get token (Unified Login)
 // @route   POST /api/auth/login
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body; // identifier can be username, email, or phone
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      $or: [
+        { email: identifier },
+        { username: identifier },
+        { phone: identifier }
+      ]
+    });
 
     if (user && (await user.matchPassword(password))) {
+      // Check status
+      if (user.kycStatus !== 'ACTIVE') {
+        return res.status(403).json({ 
+          message: 'Account is not active', 
+          kycStatus: user.kycStatus 
+        });
+      }
+
       generateToken(res, user._id);
       res.json({
         _id: user._id,
+        username: user.username,
         name: user.name,
         email: user.email,
         role: user.role,
         kycStatus: user.kycStatus
       });
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      res.status(401).json({ message: 'Invalid credentials' });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -92,6 +219,7 @@ const getUserProfile = async (req, res) => {
   if (user) {
     res.json({
       _id: user._id,
+      username: user.username,
       name: user.name,
       email: user.email,
       role: user.role,
@@ -104,6 +232,9 @@ const getUserProfile = async (req, res) => {
 };
 
 module.exports = {
+  checkUsername,
+  sendOtp,
+  verifyOtp,
   registerUser,
   loginUser,
   logoutUser,

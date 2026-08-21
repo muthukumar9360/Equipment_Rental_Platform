@@ -34,12 +34,18 @@ const productRoutes = require('./src/routes/productRoutes');
 const bookingRoutes = require('./src/routes/bookingRoutes');
 const inspectionRoutes = require('./src/routes/inspectionRoutes');
 const eventRoutes = require('./src/routes/eventRoutes');
+const adminRoutes = require('./src/routes/adminRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/inspections', inspectionRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/admin', adminRoutes);
+
+// Static uploads
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Rate limiting
 const limiter = rateLimit({

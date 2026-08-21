@@ -4,6 +4,8 @@ import RecentActivity from '../components/RecentActivity';
 import FeaturedCategories from '../components/FeaturedCategories';
 import QuickCategories from '../components/QuickCategories';
 import HeroShowcase from '../components/HeroShowcase';
+import { EquiporaFeatureShowcases } from '../components/FeatureShowcase';
+import MobileAppBanner from '../components/MobileAppBanner';
 import ExploreSections from '../components/ExploreSections';
 import LocationsAndSearches from '../components/LocationsAndSearches';
 import CategoryShowcase from '../components/CategoryShowcase';
@@ -95,7 +97,7 @@ const Marketplace = () => {
     if (selectedBrand) params.append('brand', selectedBrand);
     if (verificationStatus) params.append('verification', verificationStatus);
     
-    navigate(`/equipment?${params.toString()}`);
+    navigate(`/products?${params.toString()}`);
   };
 
   return (
@@ -431,7 +433,7 @@ const Marketplace = () => {
 
       <HeroShowcase />
 
-      <FeaturedCategories onSelectCategory={(cat) => navigate(`/equipment?category=${encodeURIComponent(cat)}`)} />
+      <FeaturedCategories onSelectCategory={(cat) => navigate(`/products?category=${encodeURIComponent(cat)}`)} />
 
       <CategoryShowcase />
 
@@ -439,9 +441,13 @@ const Marketplace = () => {
 
       <RecentActivity />
 
+      <EquiporaFeatureShowcases />
+
       <LocationsAndSearches />
 
       <ExploreSections />
+
+      <MobileAppBanner />
     </div>
   );
 };

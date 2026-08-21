@@ -20,15 +20,20 @@ L.Icon.Default.mergeOptions({
     shadowUrl: markerShadow,
 });
 
+import ImageGalleryModal from '../components/ImageGalleryModal';
+
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   
   // No dates selected initially
   // No dates selected initially
   const [dates, setDates] = useState(null);
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('18:00');
 
   useEffect(() => {
     // Force white background for this page globally
@@ -80,7 +85,8 @@ const ProductDetails = () => {
   const mapCenter = [11.1271, 78.6569];
 
   return (
-    <div className="pt-2 min-h-screen bg-white text-gray-700 font-sans pb-10 animate-fade-in relative z-0">
+    <div className="min-h-screen bg-white font-sans pb-15 relative">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-4">
       
       {/* Light Calendar Override Styles injected safely */}
       <style>{`
@@ -170,53 +176,69 @@ const ProductDetails = () => {
         }
       `}</style>
 
+      {/* FULL WIDTH TOP SECTION */}
+      <div className="w-full animate-slide-up mb-10">
+        <button 
+          onClick={() => navigate(-1)}
+          className="flex items-center space-x-2 text-gray-500 hover:text-blue-600 transition-colors cursor-pointer mb-6"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+          <span className="font-semibold text-lg tracking-wide">Back to Marketplace</span>
+        </button>
+        
+        {/* Gallery Grid - 5 Image Premium Style */}
+        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-[350px] md:h-[500px]">
+          {/* Main Large Image */}
+          <div className="md:col-span-2 md:row-span-2 relative rounded-l-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer" onClick={() => setIsGalleryOpen(true)}>
+            <img 
+              src={product.images?.[0] || 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=1200&q=80'} 
+              alt={product.name} 
+              className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105"
+            />
+          </div>
+          
+          {/* Top Middle Image */}
+          <div className="hidden md:block relative overflow-hidden bg-gray-100 group shadow-sm cursor-pointer" onClick={() => setIsGalleryOpen(true)}>
+            <img src={product.images?.[1] || 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80'} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+          </div>
+
+          {/* Top Right Image */}
+          <div className="hidden md:block relative rounded-tr-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer" onClick={() => setIsGalleryOpen(true)}>
+            <img src={product.images?.[2] || 'https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=600&q=80'} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+          </div>
+
+          {/* Bottom Middle Image */}
+          <div className="hidden md:block relative overflow-hidden bg-gray-100 group shadow-sm cursor-pointer" onClick={() => setIsGalleryOpen(true)}>
+            <img src={product.images?.[3] || 'https://images.unsplash.com/photo-1513251703273-db987b50875e?auto=format&fit=crop&w=600&q=80'} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+          </div>
+
+          {/* Bottom Right Image */}
+          <div className="hidden md:block relative rounded-br-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer" onClick={() => setIsGalleryOpen(true)}>
+            <img src={product.images?.[4] || 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=600&q=80'} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+            <button 
+              onClick={(e) => { e.stopPropagation(); setIsGalleryOpen(true); }}
+              className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md text-gray-900 font-bold px-5 py-2.5 rounded-xl shadow-lg border border-white/20 hover:bg-white hover:scale-105 transition-all"
+            >
+              View all photos
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-12">
         
         {/* LEFT COLUMN: Info */}
         <div className="lg:col-span-2 space-y-5 animate-slide-up">
           
-          {/* Main Title & Image */}
+          {/* Main Title */}
           <div>
-            <button 
-              onClick={() => navigate(-1)}
-              className="flex items-center space-x-2 text-gray-500 hover:text-blue-600 transition-colors cursor-pointer mb-6"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-              <span className="font-semibold text-lg tracking-wide">Back to Marketplace</span>
-            </button>
-            
             <div className="flex items-center space-x-4 mb-4">
               <span className="px-3 py-1 bg-blue-100 text-blue-800 border border-blue-200 rounded-full text-xs font-bold uppercase tracking-wider">
                 {product.category}
               </span>
               <span className="text-gray-500 text-sm font-medium">{product.location}</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-8 tracking-tight">{product.name}</h1>
-            
-            <div className="grid grid-cols-4 gap-4 h-[400px] md:h-[500px]">
-              <div className="col-span-4 md:col-span-2 row-span-2 relative rounded-3xl overflow-hidden bg-gray-100 group shadow-md border border-gray-200 cursor-pointer">
-                <img 
-                  src={product.images?.[0] || 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=1200&q=80'} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105"
-                />
-              </div>
-              <div className="col-span-2 md:col-span-1 row-span-1 relative rounded-2xl overflow-hidden bg-gray-100 group shadow-sm border border-gray-200 hidden md:block cursor-pointer">
-                <img src={product.images?.[1] || 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80'} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
-              </div>
-              <div className="col-span-2 md:col-span-1 row-span-1 relative rounded-2xl overflow-hidden bg-gray-100 group shadow-sm border border-gray-200 hidden md:block cursor-pointer">
-                <img src={product.images?.[2] || 'https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=600&q=80'} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
-              </div>
-              <div className="col-span-2 md:col-span-1 row-span-1 relative rounded-2xl overflow-hidden bg-gray-100 group shadow-sm border border-gray-200 hidden md:block cursor-pointer">
-                <img src={product.images?.[3] || 'https://images.unsplash.com/photo-1513251703273-db987b50875e?auto=format&fit=crop&w=600&q=80'} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
-              </div>
-              <div className="col-span-2 md:col-span-1 row-span-1 relative rounded-2xl overflow-hidden bg-gray-100 group shadow-sm border border-gray-200 hidden md:block cursor-pointer">
-                <img src={product.images?.[4] || 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=600&q=80'} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span className="text-white font-bold tracking-wider">View Gallery</span>
-                </div>
-              </div>
-            </div>
+            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">{product.name}</h1>
           </div>
 
           {/* Provider Info */}
@@ -274,8 +296,8 @@ const ProductDetails = () => {
             <div className="h-64 w-full rounded-2xl overflow-hidden border border-gray-200 relative z-10">
               <MapContainer center={mapCenter} zoom={7} scrollWheelZoom={false} className="h-full w-full">
                 <TileLayer
-                  url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+                  attribution='&copy; Google Maps'
                 />
                 <Marker position={mapCenter}>
                   <Popup className="text-gray-900">
@@ -307,12 +329,34 @@ const ProductDetails = () => {
               />
             </div>
 
-            {(!dates || dates.length !== 2 || dates[0]?.getTime() === dates[1]?.getTime()) && (
-              <p className="text-red-500 text-sm font-semibold mb-4 text-center animate-pulse">Please select an end date for your trip</p>
+            {/* Time Selection Component */}
+            <div className="mb-4 grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Start Time</label>
+                <input 
+                  type="time" 
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="w-full bg-transparent text-gray-900 font-bold focus:outline-none"
+                />
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">End Time</label>
+                <input 
+                  type="time" 
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full bg-transparent text-gray-900 font-bold focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {(!dates || dates.length !== 2 || dates[0]?.getTime() === dates[1]?.getTime() || !startTime || !endTime) && (
+              <p className="text-red-500 text-sm font-semibold mb-4 text-center animate-pulse">Please select valid dates and times for your trip</p>
             )}
 
             <button 
-              disabled={!dates || dates.length !== 2 || dates[0]?.getTime() === dates[1]?.getTime()}
+              disabled={!dates || dates.length !== 2 || dates[0]?.getTime() === dates[1]?.getTime() || !startTime || !endTime}
               className="w-full py-4 rounded-2xl bg-blue-600 text-white font-bold text-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md transition-all transform hover:-translate-y-1 cursor-pointer"
             >
               Request to Rent
@@ -337,6 +381,14 @@ const ProductDetails = () => {
         </div>
 
       </div>
+
+      </div>
+
+      <ImageGalleryModal 
+        isOpen={isGalleryOpen} 
+        onClose={() => setIsGalleryOpen(false)} 
+        product={product} 
+      />
     </div>
   );
 };

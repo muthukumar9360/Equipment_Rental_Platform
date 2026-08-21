@@ -80,10 +80,9 @@ const FeaturedCategories = ({ onSelectCategory }) => {
       {showAllCategories && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-md flex items-center justify-center z-[100] p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden transform transition-all flex flex-col max-h-[85vh]">
-            <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+            <div className="px-8 pt-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">All Categories</h3>
-                <p className="text-gray-500 text-sm mt-1">Select a category to filter equipment</p>
               </div>
               <button onClick={() => setShowAllCategories(false)} className="p-2 bg-gray-100 rounded-full text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition-colors">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>

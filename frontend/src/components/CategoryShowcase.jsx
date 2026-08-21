@@ -94,7 +94,7 @@ const CategoryShowcase = () => {
 
   const handleSubClick = (mainCategory, subCategoryTitle) => {
     // Navigate to the equipment page and filter by the main category and subcategory
-    navigate(`/equipment?category=${encodeURIComponent(mainCategory)}&subCategory=${encodeURIComponent(subCategoryTitle)}`);
+    navigate(`/products?category=${encodeURIComponent(mainCategory)}&subCategory=${encodeURIComponent(subCategoryTitle)}`);
     setShowAllModal(false);
   };
 

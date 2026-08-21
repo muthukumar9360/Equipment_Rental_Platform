@@ -134,6 +134,24 @@ const ProductsPage = () => {
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const currentProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 4) {
+        pages.push(1, 2, 3, 4, 5, '...', totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+    return pages;
+  };
+
   return (
     <div className="pb-10 relative">
       <div className="flex items-center mb-8 relative">
@@ -356,7 +374,7 @@ const ProductsPage = () => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
           {currentProducts.map(product => (
-            <Link key={product._id} to={`/products/${product._id}`} className="relative group block rounded-[28px] p-[3px] bg-white hover:bg-gradient-to-br hover:from-blue-500 hover:via-purple-500 hover:to-indigo-600 transition-all duration-500 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer overflow-hidden">
+            <Link key={product._id} to={`/preview/${product._id}`} className="relative group block rounded-[28px] p-[3px] bg-white hover:bg-gradient-to-br hover:from-blue-500 hover:via-purple-500 hover:to-indigo-600 transition-all duration-500 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer overflow-hidden">
               <div className="bg-white rounded-[25px] overflow-hidden flex flex-col sm:flex-row h-full w-full relative z-10 border border-gray-100 group-hover:border-transparent transition-colors duration-300">
                 {/* Image Section - Left */}
                 <div className="w-full sm:w-[45%] shrink-0 overflow-hidden bg-gray-100 relative min-h-[220px]">
@@ -428,18 +446,24 @@ const ProductsPage = () => {
           </button>
           
           <div className="flex space-x-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`w-10 h-10 rounded-lg flex items-center justify-center font-medium transition-colors ${
-                  currentPage === page 
-                    ? 'bg-blue-600 text-white shadow-md' 
-                    : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {page}
-              </button>
+            {getPageNumbers().map((page, index) => (
+              page === '...' ? (
+                <span key={`ellipsis-${index}`} className="w-10 h-10 flex items-center justify-center text-gray-500 font-medium">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center font-medium transition-colors ${
+                    currentPage === page 
+                      ? 'bg-blue-600 text-white shadow-md' 
+                      : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              )
             ))}
           </div>
 
