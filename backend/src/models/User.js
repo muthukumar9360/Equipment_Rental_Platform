@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema({
   kycData: {
     primaryDocumentType: { type: String, enum: ['Aadhaar', 'Passport', 'Voter ID', 'Driving Licence'] },
     primaryDocumentNumber: { type: String }, // Masked in UI later
+    aadhaarNumber: { type: String },
+    panNumber: { type: String },
+    otherDocType: { type: String },
+    otherDocNumber: { type: String },
     documentUrls: [
       {
         docType: { type: String }, // e.g., 'Aadhaar Front', 'PAN Card'

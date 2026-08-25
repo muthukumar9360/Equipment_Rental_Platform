@@ -62,7 +62,8 @@ const ProductDetails = () => {
         // Track recently viewed items
         try {
           const viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
-          const updatedViewed = [data, ...viewed.filter(p => p._id !== data._id)].slice(0, 4);
+          const viewedItem = { ...data, viewedAt: new Date().toISOString() };
+          const updatedViewed = [viewedItem, ...viewed.filter(p => p._id !== data._id)].slice(0, 30);
           localStorage.setItem('recentlyViewed', JSON.stringify(updatedViewed));
         } catch (e) {
           console.error("Local storage tracking error", e);
@@ -199,13 +200,13 @@ const ProductDetails = () => {
       `}</style>
 
       {/* FULL WIDTH TOP SECTION */}
-      <div className="w-full animate-slide-up mb-10">
+      <div className="w-full animate-slide-up mb-8">
         <button 
           onClick={() => navigate(-1)}
-          className="flex items-center space-x-2 text-gray-500 hover:text-blue-600 transition-colors cursor-pointer mb-6"
+          className="flex items-center space-x-2 text-black hover:text-gray-900 transition-colors cursor-pointer mb-6 bg-gray-50 px-4 py-2 rounded-full border border-gray-200"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-          <span className="font-semibold text-lg tracking-wide">Back to Marketplace</span>
+          <span className="font-semibold text-sm tracking-wide">Back to Marketplace</span>
         </button>
         
         {/* Gallery Grid - 5 Image Premium Style */}

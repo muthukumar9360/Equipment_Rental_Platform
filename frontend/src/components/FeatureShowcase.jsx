@@ -7,25 +7,25 @@ export const ScrollStackSection = ({
   return (
     <section className="relative min-h-screen bg-[#f8f9fa] px-4 sm:px-6 md:px-12 lg:px-12">
       {/* Normal Section Title (Removed sticky to fix glitch) */}
-      <div className="py-2 text-center">
+      <div className="py-2 text-center mb-10">
         <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 md:text-5xl">
           {sectionTitle}
         </h2>
       </div>
 
       {/* Cards Container */}
-      <div className="relative mx-auto mt-12 max-w-[1400px]">
+      <div className="relative mx-auto mt-5 max-w-[1400px]">
         {cards.map((card, index) => (
           <div
             key={index}
             className="sticky mb-10"
             style={{
-              top: `${160 + index * 24}px`,
+              top: `${110 + index * 24}px`,
               zIndex: index + 1,
             }}
           >
-            <div className="min-h-[420px] rounded-[2.5rem] bg-white p-7 shadow-[0_-8px_40px_rgba(0,0,0,0.08)] border border-gray-100 md:min-h-[460px] md:p-10">
-              <div className="flex h-full min-h-[360px] flex-col gap-8 md:flex-row md:items-center md:gap-12">
+            <div className="min-h-[350px] rounded-[2.5rem] bg-white p-2 shadow-[0_-8px_40px_rgba(0,0,0,0.08)] border border-gray-100 md:min-h-[460px] md:p-10">
+              <div className="flex h-full min-h-[250px] flex-col gap-4 md:flex-row md:items-center md:gap-12">
                 
                 {/* Image */}
                 <div className="w-full shrink-0 md:w-[350px] lg:w-[400px]">

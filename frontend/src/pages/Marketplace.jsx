@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import RecentActivity from '../components/RecentActivity';
+
 import FeaturedCategories from '../components/FeaturedCategories';
 import QuickCategories from '../components/QuickCategories';
 import HeroShowcase from '../components/HeroShowcase';
@@ -454,7 +454,6 @@ const Marketplace = () => {
 
       <QuickCategories products={products} />
 
-      <RecentActivity products={products} />
 
       <EquiporaFeatureShowcases />
 

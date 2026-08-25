@@ -60,13 +60,13 @@ const ProviderPreview = () => {
     <div className="min-h-screen bg-white font-sans pb-5 animate-fade-in relative">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-4">
         
-        <div className="mb-6">
+        <div className="mb-3">
           <button 
             onClick={() => navigate(-1)}
-            className="flex items-center space-x-2 text-gray-500 hover:text-gray-900 transition-colors font-semibold bg-gray-50 px-4 py-2 rounded-full border border-gray-200"
+            className="flex items-center space-x-2 text-black hover:text-gray-900 transition-colors font-semibold bg-gray-50 px-4 py-2 rounded-full border border-gray-200 cursor-pointer"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-            <span>Back to Marketplace</span>
+            <span className="font-semibold text-sm tracking-wide">Back to Marketplace</span>
           </button>
         </div>
 

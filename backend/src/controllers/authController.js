@@ -33,13 +33,15 @@ const checkUsername = async (req, res) => {
 // @route   POST /api/auth/send-otp
 const sendOtp = async (req, res) => {
   try {
-    const { identifier } = req.body; // mobile or email
+    const { identifier, type } = req.body; // mobile or email
     if (!identifier) return res.status(400).json({ message: 'Identifier is required' });
     
-    // Check if identifier is already used by a verified active user
-    const userExists = await User.findOne({ $or: [{ email: identifier }, { phone: identifier }] });
-    if (userExists && userExists.kycStatus === 'ACTIVE') {
-      return res.status(400).json({ message: 'This contact detail is already in use by an active account.' });
+    // Check if identifier is already used by a verified active user, unless this is for a login
+    if (type !== 'login') {
+      const userExists = await User.findOne({ $or: [{ email: identifier }, { phone: identifier }] });
+      if (userExists && userExists.kycStatus === 'ACTIVE') {
+        return res.status(400).json({ message: 'This contact detail is already in use by an active account.' });
+      }
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
@@ -108,7 +110,7 @@ const registerUser = async (req, res) => {
     const { 
       username, name, email, phone, password, 
       dob, gender, state, district, city, line1, pincode,
-      primaryDocumentType 
+      primaryDocumentType, aadhaarNumber, panNumber, otherDocType, otherDocNumber
     } = req.body;
 
     const userExists = await User.findOne({ $or: [{ email }, { username }] });
@@ -121,12 +123,19 @@ const registerUser = async (req, res) => {
 
     // Map uploaded files
     const documentUrls = [];
-    if (req.files) {
+    if (req.files && Array.isArray(req.files)) {
+      req.files.forEach(file => {
+        documentUrls.push({
+          docType: file.fieldname,
+          url: file.path
+        });
+      });
+    } else if (req.files) {
       Object.keys(req.files).forEach(fieldName => {
         req.files[fieldName].forEach(file => {
           documentUrls.push({
-            docType: fieldName, // e.g., 'aadhaarFront'
-            url: file.path // In local, this is the path in /uploads
+            docType: fieldName,
+            url: file.path
           });
         });
       });
@@ -143,6 +152,10 @@ const registerUser = async (req, res) => {
       kycStatus: 'PENDING_REVIEW',
       kycData: {
         primaryDocumentType,
+        aadhaarNumber,
+        panNumber,
+        otherDocType,
+        otherDocNumber,
         documentUrls
       }
     });
@@ -161,19 +174,49 @@ const registerUser = async (req, res) => {
   }
 };
 
+// @desc    Pre-login to verify credentials and trigger OTP
+// @route   POST /api/auth/pre-login
+const preLoginUser = async (req, res) => {
+  try {
+    const { username, password, role } = req.body;
+
+    const user = await User.findOne({ username });
+
+    if (user && (await user.matchPassword(password))) {
+      // Validate role
+      if (role && user.role !== role) {
+         return res.status(403).json({ message: `Access denied. You are not registered as an ${role}.` });
+      }
+
+      // Check KYC status
+      if (user.kycStatus !== 'ACTIVE' && user.role !== 'admin') {
+        return res.status(403).json({ 
+          message: 'Account is not active', 
+          kycStatus: user.kycStatus 
+        });
+      }
+
+      res.json({
+        success: true,
+        email: user.email,
+        phone: user.phone,
+        message: 'Credentials valid. Proceed to OTP.'
+      });
+    } else {
+      res.status(401).json({ message: 'Invalid credentials' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Auth user & get token (Unified Login)
 // @route   POST /api/auth/login
 const loginUser = async (req, res) => {
   try {
-    const { identifier, password } = req.body; // identifier can be username, email, or phone
+    const { username, password } = req.body;
 
-    const user = await User.findOne({
-      $or: [
-        { email: identifier },
-        { username: identifier },
-        { phone: identifier }
-      ]
-    });
+    const user = await User.findOne({ username });
 
     if (user && (await user.matchPassword(password))) {
       // Check status
@@ -222,9 +265,14 @@ const getUserProfile = async (req, res) => {
       username: user.username,
       name: user.name,
       email: user.email,
+      phone: user.phone,
+      dob: user.dob,
+      address: user.address,
       role: user.role,
       kycStatus: user.kycStatus,
-      trustScore: user.trustScore
+      kycData: user.kycData,
+      trustScore: user.trustScore,
+      equiporaId: user.equiporaId
     });
   } else {
     res.status(404).json({ message: 'User not found' });
@@ -236,6 +284,7 @@ module.exports = {
   sendOtp,
   verifyOtp,
   registerUser,
+  preLoginUser,
   loginUser,
   logoutUser,
   getUserProfile
