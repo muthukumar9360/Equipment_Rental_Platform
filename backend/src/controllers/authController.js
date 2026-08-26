@@ -127,7 +127,7 @@ const registerUser = async (req, res) => {
       req.files.forEach(file => {
         documentUrls.push({
           docType: file.fieldname,
-          url: file.path
+          url: '/uploads/' + file.filename
         });
       });
     } else if (req.files) {
@@ -135,7 +135,7 @@ const registerUser = async (req, res) => {
         req.files[fieldName].forEach(file => {
           documentUrls.push({
             docType: fieldName,
-            url: file.path
+            url: '/uploads/' + file.filename
           });
         });
       });

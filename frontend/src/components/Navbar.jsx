@@ -190,6 +190,18 @@ const Navbar = () => {
             {/* Auth Buttons */}
             {user ? (
               <div className="hidden md:flex items-center space-x-2 bg-gray-50 border border-gray-200/60 p-1.5 rounded-[1.5rem]">
+                {user.role === 'admin' && (
+                  <Link 
+                    to="/admin/verifications" 
+                    className={`px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${
+                      isActive('/admin/verifications') 
+                        ? 'bg-blue-600 text-white shadow-md' 
+                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800'
+                    }`}
+                  >
+                    Admin Center
+                  </Link>
+                )}
                 <Link 
                   to="/dashboard" 
                   className={`px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${
