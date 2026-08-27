@@ -306,7 +306,7 @@ const Marketplace = () => {
         <h2 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl mb-4">
           Trust-First Equipment Rental
         </h2>
-        <p className="text-lg text-blue-500 max-w-2xl mx-auto">
+        <p className="text-lg text-blue-500 max-w-3xl mx-auto">
           Rent high-quality gear with confidence. Verified users, guaranteed condition, and secure process.
         </p>
       </div>

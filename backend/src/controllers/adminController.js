@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Product = require('../models/Product');
 const VerificationAudit = require('../models/VerificationAudit');
 
 // @desc    Get all users pending verification
@@ -56,7 +57,96 @@ const reviewUserVerification = async (req, res) => {
   }
 };
 
+// @desc    Get all users for admin
+// @route   GET /api/admin/users
+const getAdminUsers = async (req, res) => {
+  try {
+    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get products for admin (can filter by verificationStatus)
+// @route   GET /api/admin/products
+const getAdminProducts = async (req, res) => {
+  try {
+    const { status } = req.query;
+    let query = {};
+    if (status) {
+      query.verificationStatus = status;
+    }
+    const products = await Product.find(query).populate('providerId', 'name email').sort({ createdAt: -1 });
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Review product verification
+// @route   POST /api/admin/products/review
+const reviewProduct = async (req, res) => {
+  try {
+    const { productId, newStatus, reason } = req.body;
+    
+    if (!productId || !newStatus) {
+      return res.status(400).json({ message: 'Product ID and new status are required' });
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    product.verificationStatus = newStatus;
+    
+    // We could add notes/reasons to a product audit trail if needed
+    // For now we just save the status.
+
+    await product.save();
+    res.json({ message: `Product status updated to ${newStatus}`, product });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Delete a user
+// @route   DELETE /api/admin/users/:id
+const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: 'User removed' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Delete a product
+// @route   DELETE /api/admin/products/:id
+const deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    await Product.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Product removed' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getPendingVerifications,
-  reviewUserVerification
+  reviewUserVerification,
+  getAdminUsers,
+  getAdminProducts,
+  reviewProduct,
+  deleteUser,
+  deleteProduct
 };

@@ -8,11 +8,21 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'mock_key');
 // @route   POST /api/products
 const createProduct = async (req, res) => {
   try {
-    const { name, category, brand, model, specifications, pricePerDay, securityDeposit, description, serialNumber, accessories } = req.body;
+    const { name, category, subCategory, brand, model, specifications, pricePerDay, securityDeposit, description, serialNumber, accessories, condition, location, includedAccessories } = req.body;
     
-    let imageUrls = [];
-    if (req.files && req.files['images']) {
-      imageUrls = req.files['images'].map(file => file.path);
+    let frontImage = '', backImage = '', leftImage = '', rightImage = '', topImage = '', bottomImage = '';
+    let additionalImages = [];
+
+    if (req.files) {
+      if (req.files['frontImage']) frontImage = req.files['frontImage'][0].path;
+      if (req.files['backImage']) backImage = req.files['backImage'][0].path;
+      if (req.files['leftImage']) leftImage = req.files['leftImage'][0].path;
+      if (req.files['rightImage']) rightImage = req.files['rightImage'][0].path;
+      if (req.files['topImage']) topImage = req.files['topImage'][0].path;
+      if (req.files['bottomImage']) bottomImage = req.files['bottomImage'][0].path;
+      if (req.files['additionalImages']) {
+        additionalImages = req.files['additionalImages'].map(file => file.path);
+      }
     }
     
     let invoiceUrl = null;
@@ -42,6 +52,7 @@ const createProduct = async (req, res) => {
       providerId: req.user._id,
       name,
       category,
+      subCategory,
       brand,
       model,
       specifications: parsedSpecs,
@@ -49,10 +60,19 @@ const createProduct = async (req, res) => {
       securityDeposit,
       description,
       serialNumber,
-      images: imageUrls,
+      frontImage,
+      backImage,
+      leftImage,
+      rightImage,
+      topImage,
+      bottomImage,
+      additionalImages,
       invoiceUrl,
       invoiceData,
       accessories: parsedAccessories,
+      condition,
+      location: location || 'Chennai',
+      includedAccessories,
       verificationStatus: 'Pending'
     });
 
@@ -97,4 +117,15 @@ const getProductById = async (req, res) => {
   }
 };
 
-module.exports = { createProduct, getProducts, getProductById };
+// @desc    Get products created by logged in user
+// @route   GET /api/products/my-products
+const getMyProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ providerId: req.user._id }).sort({ createdAt: -1 });
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { createProduct, getProducts, getProductById, getMyProducts };

@@ -3,14 +3,21 @@ import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
-const AdminVerificationCenter = () => {
+const AdminDashboard = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [pendingUsers, setPendingUsers] = useState([]);
+  
+  const [activeTab, setActiveTab] = useState('pending-kyc');
   const [loading, setLoading] = useState(true);
   
-  // Selected user for review modal
+  const [pendingUsers, setPendingUsers] = useState([]);
+  const [pendingProducts, setPendingProducts] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  
+  // Modals
   const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [actionReason, setActionReason] = useState('');
   const [previewImage, setPreviewImage] = useState(null);
 
@@ -19,21 +26,33 @@ const AdminVerificationCenter = () => {
       navigate('/');
       return;
     }
-    fetchPendingUsers();
-  }, [user]);
+    fetchDataForTab();
+  }, [user, activeTab]);
 
-  const fetchPendingUsers = async () => {
+  const fetchDataForTab = async () => {
+    setLoading(true);
     try {
-      const { data } = await api.get('/admin/verifications/pending');
-      setPendingUsers(data);
+      if (activeTab === 'pending-kyc') {
+        const { data } = await api.get('/admin/verifications/pending');
+        setPendingUsers(data);
+      } else if (activeTab === 'pending-products') {
+        const { data } = await api.get('/admin/products?status=Pending');
+        setPendingProducts(data);
+      } else if (activeTab === 'users') {
+        const { data } = await api.get('/admin/users');
+        setAllUsers(data);
+      } else if (activeTab === 'products') {
+        const { data } = await api.get('/admin/products');
+        setAllProducts(data);
+      }
     } catch (err) {
-      console.error('Failed to fetch verifications', err);
+      console.error('Failed to fetch data', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleReviewAction = async (newStatus) => {
+  const handleUserReview = async (newStatus) => {
     if ((newStatus === 'REJECTED' || newStatus === 'MORE_INFO_REQUIRED' || newStatus === 'SUSPENDED') && !actionReason) {
       alert(`Please provide a reason for ${newStatus}`);
       return;
@@ -45,105 +64,284 @@ const AdminVerificationCenter = () => {
         newStatus,
         reason: actionReason
       });
-      
-      // Remove from list and close modal
-      setPendingUsers(pendingUsers.filter(u => u._id !== selectedUser._id));
       setSelectedUser(null);
       setActionReason('');
+      fetchDataForTab();
     } catch (err) {
       alert(err.response?.data?.message || 'Error updating status');
     }
   };
 
-  const openReviewModal = (u) => {
-    setSelectedUser(u);
-    setActionReason('');
+  const handleProductReview = async (newStatus) => {
+    if ((newStatus === 'Rejected' || newStatus === 'Manual Review Required') && !actionReason) {
+      alert(`Please provide a reason for ${newStatus}`);
+      return;
+    }
+    
+    try {
+      await api.post('/admin/products/review', {
+        productId: selectedProduct._id,
+        newStatus,
+        reason: actionReason
+      });
+      setSelectedProduct(null);
+      setActionReason('');
+      fetchDataForTab();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error updating status');
+    }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading Admin Center...</div>;
+  const handleDeleteUser = async () => {
+    if (!window.confirm('Are you sure you want to delete this user permanently?')) return;
+    try {
+      await api.delete(`/admin/users/${selectedUser._id}`);
+      setSelectedUser(null);
+      fetchDataForTab();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error deleting user');
+    }
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!window.confirm('Are you sure you want to delete this product permanently?')) return;
+    try {
+      await api.delete(`/admin/products/${selectedProduct._id}`);
+      setSelectedProduct(null);
+      fetchDataForTab();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error deleting product');
+    }
+  };
+
+  const tabs = [
+    { id: 'pending-kyc', label: 'Identity Verifications', count: activeTab === 'pending-kyc' ? pendingUsers.length : null },
+    { id: 'pending-products', label: 'Product Approvals', count: activeTab === 'pending-products' ? pendingProducts.length : null },
+    { id: 'users', label: 'All Users' },
+    { id: 'products', label: 'All Products' },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8 text-gray-900 font-sans animate-fade-in">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[90rem] mx-auto">
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Admin Verification Center</h2>
-            <p className="text-gray-500 mt-1">Review and approve new user identities.</p>
+            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Admin Dashboard</h2>
+            <p className="text-gray-500 mt-1">Central command for user identities and platform inventory.</p>
           </div>
-          <div className="bg-blue-50 text-blue-700 px-5 py-2.5 rounded-xl font-semibold border border-blue-100 shadow-sm flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
-            </span>
-            {pendingUsers.length} Pending Reviews
-          </div>
+        </div>
+
+        {/* Custom Tabs */}
+        <div className="flex space-x-1 bg-gray-200/50 p-1 rounded-xl mb-6 overflow-x-auto w-fit max-w-full">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                activeTab === tab.id 
+                  ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-900/5' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
+              }`}
+            >
+              {tab.label}
+              {tab.count !== null && tab.count > 0 && (
+                <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs">
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50/50">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Equipora ID</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User Details</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Document</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {pendingUsers.map(u => (
-                <tr key={u._id} className="hover:bg-blue-50/30 transition-colors">
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <span className="font-mono font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">{u.equiporaId}</span>
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="text-sm font-semibold text-gray-900">{u.name}</div>
-                    <div className="text-sm text-gray-500 mt-0.5">@{u.username}</div>
-                    <div className="text-xs text-green-700 font-medium mt-1.5 flex gap-2">
-                      {u.emailVerified && <span className="flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg> Email</span>} 
-                      {u.mobileVerified && <span className="flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg> Mobile</span>}
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-600 font-medium">
-                    {u.kycData?.primaryDocumentType || 'N/A'}
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap">
-                    <span className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full border ${
-                      u.kycStatus === 'PENDING_REVIEW' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 
-                      u.kycStatus === 'MORE_INFO_REQUIRED' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-gray-50 text-gray-700 border-gray-200'
-                    }`}>
-                      {u.kycStatus.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => openReviewModal(u)} className="text-blue-700 bg-white border border-gray-300 hover:bg-gray-50 font-semibold px-4 py-2 rounded-lg shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-offset-1">
-                      Review Application
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {pendingUsers.length === 0 && (
-                <tr>
-                  <td colSpan="5" className="px-6 py-16 text-center text-gray-500 font-medium">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-600">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg>
-                      </div>
-                      Queue is empty. Great job!
-                    </div>
-                  </td>
-                </tr>
+          {loading ? (
+            <div className="p-16 text-center text-gray-500">Loading data...</div>
+          ) : (
+            <div className="overflow-x-auto">
+              
+              {/* TAB 1: PENDING USERS (KYC) */}
+              {activeTab === 'pending-kyc' && (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50/50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Equipora ID</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User Details</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Document</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {pendingUsers.map(u => (
+                      <tr key={u._id} className="hover:bg-blue-50/30 transition-colors">
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <span className="font-mono font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">{u.equiporaId}</span>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="text-sm font-semibold text-gray-900">{u.name}</div>
+                          <div className="text-sm text-gray-500 mt-0.5">@{u.username}</div>
+                          <div className="text-xs text-green-700 font-medium mt-1.5 flex gap-2">
+                            {u.emailVerified && <span className="flex items-center gap-1">Email</span>} 
+                            {u.mobileVerified && <span className="flex items-center gap-1">Mobile</span>}
+                          </div>
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-600 font-medium">
+                          {u.kycData?.primaryDocumentType || 'N/A'}
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <span className="px-3 py-1 inline-flex text-xs font-semibold rounded-full border bg-yellow-50 text-yellow-700 border-yellow-200">
+                            {u.kycStatus.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
+                          <button onClick={() => { setSelectedUser(u); setActionReason(''); }} className="text-blue-700 bg-white border border-gray-300 hover:bg-gray-50 font-semibold px-4 py-2 rounded-lg shadow-sm transition-colors">
+                            Review Identity
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {pendingUsers.length === 0 && (
+                      <tr><td colSpan="5" className="px-6 py-16 text-center text-gray-500 font-medium">Queue is empty.</td></tr>
+                    )}
+                  </tbody>
+                </table>
               )}
-            </tbody>
-          </table>
+
+              {/* TAB 2: PENDING PRODUCTS */}
+              {activeTab === 'pending-products' && (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50/50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product Info</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Provider</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Pricing</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {pendingProducts.map(p => (
+                      <tr key={p._id} className="hover:bg-blue-50/30 transition-colors">
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                              <img src={p.images?.[0] ? (p.images[0].startsWith('http') ? p.images[0] : `http://localhost:5000${p.images[0].startsWith('/') ? '' : '/'}${p.images[0]}`) : 'https://via.placeholder.com/150'} alt="" className="h-full w-full object-cover" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-semibold text-gray-900">{p.name}</div>
+                              <div className="text-xs text-gray-500 mt-1">{p.brand} {p.model}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-600">
+                          {p.providerId?.name || 'Unknown'}
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <div className="text-sm text-gray-900 font-semibold">₹{p.pricePerDay}/day</div>
+                          <div className="text-xs text-gray-500">Dep: ₹{p.securityDeposit}</div>
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <span className="px-3 py-1 inline-flex text-xs font-semibold rounded-full border bg-orange-50 text-orange-700 border-orange-200">
+                            Pending Review
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
+                          <button onClick={() => { setSelectedProduct(p); setActionReason(''); }} className="text-blue-700 bg-white border border-gray-300 hover:bg-gray-50 font-semibold px-4 py-2 rounded-lg shadow-sm transition-colors">
+                            Review Product
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {pendingProducts.length === 0 && (
+                      <tr><td colSpan="5" className="px-6 py-16 text-center text-gray-500 font-medium">No products pending approval.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
+
+              {/* TAB 3: ALL USERS */}
+              {activeTab === 'users' && (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50/50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">KYC Status</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Joined</th>
+                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {allUsers.map(u => (
+                      <tr key={u._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-semibold text-gray-900">{u.name}</div>
+                          <div className="text-sm text-gray-500">{u.email}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2.5 py-0.5 rounded-md text-xs font-medium border ${u.role === 'admin' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>{u.role.toUpperCase()}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${u.kycStatus === 'ACTIVE' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>{u.kycStatus.replace('_', ' ')}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(u.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button onClick={() => { setSelectedUser(u); setActionReason(''); }} className="text-blue-700 hover:text-blue-900 font-semibold">
+                            Manage
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+              {/* TAB 4: ALL PRODUCTS */}
+              {activeTab === 'products' && (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50/50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price/Day</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {allProducts.map(p => (
+                      <tr key={p._id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-semibold text-gray-900">{p.name}</div>
+                          <div className="text-xs text-gray-500">{p.brand}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{p.category}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">₹{p.pricePerDay}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${p.verificationStatus === 'Verified' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>{p.verificationStatus}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button onClick={() => { setSelectedProduct(p); setActionReason(''); }} className="text-blue-700 hover:text-blue-900 font-semibold">
+                            Manage
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Review Modal */}
+      {/* USER REVIEW MODAL (From previous iteration) */}
       {selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto animate-slide-up border border-gray-200">
-            
             <div className="p-8">
               <div className="flex justify-between items-start mb-8">
                 <div>
@@ -153,46 +351,32 @@ const AdminVerificationCenter = () => {
                     <span className="font-mono font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">{selectedUser.equiporaId}</span>
                   </div>
                 </div>
-                <button onClick={() => setSelectedUser(null)} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors focus:outline-none">
+                <button onClick={() => setSelectedUser(null)} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
                 <div className="lg:col-span-5 space-y-6">
-                  {/* Data Panels */}
                   <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2 pb-3 border-b border-gray-100">
-                      <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                      Personal Details
-                    </h4>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">Personal Details</h4>
                     <div className="space-y-1">
                       <div className="flex justify-between items-center py-2 border-b border-gray-50"><span className="text-sm text-gray-500">Full Name</span> <span className="font-semibold text-gray-900">{selectedUser.name}</span></div>
                       <div className="flex justify-between items-center py-2 border-b border-gray-50"><span className="text-sm text-gray-500">Username</span> <span className="font-medium text-gray-900">@{selectedUser.username}</span></div>
-                      <div className="flex justify-between items-center py-2 border-b border-gray-50"><span className="text-sm text-gray-500">Date of Birth</span> <span className="font-medium text-gray-900">{new Date(selectedUser.dob).toLocaleDateString()}</span></div>
-                      <div className="flex justify-between items-center py-2"><span className="text-sm text-gray-500">Gender</span> <span className="font-medium text-gray-900 capitalize">{selectedUser.gender}</span></div>
                     </div>
                   </div>
-
                   <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2 pb-3 border-b border-gray-100">
-                      <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                      Location Data
-                    </h4>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">Location Data</h4>
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between items-center py-2 border-b border-gray-50"><span className="text-gray-500">Address</span> <span className="font-medium text-gray-900 text-right max-w-[60%]">{selectedUser.address?.line1}</span></div>
                       <div className="flex justify-between items-center py-2 border-b border-gray-50"><span className="text-gray-500">City & Dist.</span> <span className="font-medium text-gray-900">{selectedUser.address?.city}, {selectedUser.address?.district}</span></div>
-                      <div className="flex justify-between items-center py-2"><span className="text-gray-500">State & PIN</span> <span className="font-medium text-gray-900">{selectedUser.address?.state} - {selectedUser.address?.pincode}</span></div>
                     </div>
                   </div>
                 </div>
 
                 <div className="lg:col-span-7">
                   <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 h-full">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-6 flex items-center gap-2 pb-3 border-b border-gray-200">
-                      <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                      Uploaded Documents ({selectedUser.kycData?.primaryDocumentType})
-                    </h4>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200">Uploaded Documents</h4>
                     <div className="space-y-6">
                       {selectedUser.kycData?.documentUrls?.map((doc, idx) => (
                         <div key={idx} className="group">
@@ -202,48 +386,115 @@ const AdminVerificationCenter = () => {
                               src={`http://localhost:5000${doc.url.startsWith('/') ? '' : '/'}${doc.url}`} 
                               alt={doc.docType} 
                               className="w-full h-full object-cover"
-                              onError={(e) => console.log('Image failed to load:', e.target.src)}
                             />
                             <div 
                               onClick={() => setPreviewImage(`http://localhost:5000${doc.url.startsWith('/') ? '' : '/'}${doc.url}`)}
                               className="absolute inset-0 bg-gray-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center cursor-pointer backdrop-blur-sm"
                             >
-                              <div className="bg-white text-gray-900 font-semibold text-sm px-4 py-2 rounded-lg shadow-sm border border-gray-200 transform scale-95 group-hover:scale-100 transition-transform">
-                                View Full Screen
-                              </div>
+                              <div className="bg-white text-gray-900 font-semibold text-sm px-4 py-2 rounded-lg shadow-sm">View Full Screen</div>
                             </div>
                           </div>
                         </div>
                       ))}
-                      {(!selectedUser.kycData?.documentUrls || selectedUser.kycData.documentUrls.length === 0) && (
-                        <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-medium">
-                          No documents uploaded
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                <label className="block text-sm font-semibold text-gray-900 mb-2">Admin Notes / Reason <span className="text-gray-500 font-normal">(Required for rejection or asking for info)</span></label>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Admin Notes / Reason</label>
                 <textarea 
                   value={actionReason} 
                   onChange={e => setActionReason(e.target.value)}
-                  className="w-full bg-white text-gray-900 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-6 sm:text-sm placeholder-gray-400 shadow-inner"
+                  className="w-full bg-white px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 mb-6"
                   rows="2"
-                  placeholder="e.g. Document image is blurry, please re-upload a clear copy."
                 ></textarea>
 
                 <div className="flex flex-wrap gap-3 justify-end">
-                  <button onClick={() => setSelectedUser(null)} className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200">Cancel</button>
-                  <button onClick={() => handleReviewAction('SUSPENDED')} className="px-5 py-2.5 bg-red-50 border border-red-200 text-red-700 font-semibold rounded-xl hover:bg-red-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-200">Suspend</button>
-                  <button onClick={() => handleReviewAction('REJECTED')} className="px-5 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-red-500">Reject</button>
-                  <button onClick={() => handleReviewAction('MORE_INFO_REQUIRED')} className="px-5 py-2.5 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500">Request Info</button>
-                  <button onClick={() => handleReviewAction('ACTIVE')} className="px-6 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"/></svg>
-                    Approve Application
-                  </button>
+                  <button onClick={() => setSelectedUser(null)} className="px-5 py-2.5 bg-white border border-gray-300 font-semibold rounded-xl hover:bg-gray-50">Cancel</button>
+                  <button onClick={handleDeleteUser} className="px-5 py-2.5 bg-gray-100 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-200">Delete User</button>
+                  <button onClick={() => handleUserReview('REJECTED')} className="px-5 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700">Reject</button>
+                  <button onClick={() => handleUserReview('ACTIVE')} className="px-6 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700">Approve Application</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRODUCT REVIEW MODAL */}
+      {selectedProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto animate-slide-up border border-gray-200">
+            <div className="p-8">
+              <div className="flex justify-between items-start mb-8">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 tracking-tight">Review Product Listing</h3>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-sm text-gray-500">Provider:</span>
+                    <span className="font-semibold text-gray-900">{selectedProduct.providerId?.name || 'Unknown'}</span>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedProduct(null)} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div className="space-y-6">
+                  <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 h-full">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200">Product Images</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      {selectedProduct.images?.map((imgUrl, idx) => {
+                        const cleanUrl = imgUrl.startsWith('http') ? imgUrl : `http://localhost:5000${imgUrl.startsWith('/') ? '' : '/'}${imgUrl}`;
+                        return (
+                          <div key={idx} className="aspect-square bg-gray-200 rounded-xl overflow-hidden border border-gray-300 relative group">
+                            <img src={cleanUrl} alt="" className="w-full h-full object-cover" />
+                            <div 
+                              onClick={() => setPreviewImage(cleanUrl)}
+                              className="absolute inset-0 bg-gray-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                            >
+                              <span className="text-white text-xs font-semibold bg-gray-900/80 px-2 py-1 rounded">Expand</span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-4 pb-3 border-b border-gray-100">Listing Details</h4>
+                    <div className="space-y-3">
+                      <div><span className="text-sm text-gray-500 block">Name</span><span className="font-semibold text-gray-900">{selectedProduct.name}</span></div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div><span className="text-sm text-gray-500 block">Brand</span><span className="font-medium text-gray-900">{selectedProduct.brand}</span></div>
+                        <div><span className="text-sm text-gray-500 block">Category</span><span className="font-medium text-gray-900">{selectedProduct.category}</span></div>
+                        <div><span className="text-sm text-gray-500 block">Price/Day</span><span className="font-bold text-green-700">₹{selectedProduct.pricePerDay}</span></div>
+                        <div><span className="text-sm text-gray-500 block">Deposit</span><span className="font-medium text-gray-900">₹{selectedProduct.securityDeposit}</span></div>
+                      </div>
+                      <div><span className="text-sm text-gray-500 block">Description</span><p className="text-sm text-gray-700 mt-1">{selectedProduct.description}</p></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Admin Notes / Reason</label>
+                <textarea 
+                  value={actionReason} 
+                  onChange={e => setActionReason(e.target.value)}
+                  className="w-full bg-white px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 mb-6"
+                  rows="2"
+                  placeholder="e.g. Images are blurry."
+                ></textarea>
+
+                <div className="flex flex-wrap gap-3 justify-end">
+                  <button onClick={() => setSelectedProduct(null)} className="px-5 py-2.5 bg-white border border-gray-300 font-semibold rounded-xl hover:bg-gray-50">Cancel</button>
+                  <button onClick={handleDeleteProduct} className="px-5 py-2.5 bg-gray-100 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-200">Delete Product</button>
+                  <button onClick={() => handleProductReview('Rejected')} className="px-5 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700">Reject Listing</button>
+                  <button onClick={() => handleProductReview('Verified')} className="px-6 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700">Approve & Publish</button>
                 </div>
               </div>
             </div>
@@ -267,4 +518,4 @@ const AdminVerificationCenter = () => {
   );
 };
 
-export default AdminVerificationCenter;
+export default AdminDashboard;

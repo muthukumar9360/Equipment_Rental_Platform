@@ -19,9 +19,17 @@ const productSchema = new mongoose.Schema({
   securityDeposit: { type: Number, required: true },
   description: { type: String },
   
-  images: [{ type: String }], // Cloudinary URLs
+  frontImage: { type: String, required: true },
+  backImage: { type: String, required: true },
+  leftImage: { type: String, required: true },
+  rightImage: { type: String, required: true },
+  topImage: { type: String, required: true },
+  bottomImage: { type: String, required: true },
+  additionalImages: [{ type: String }], // Optional additional images
   
   serialNumber: { type: String },
+  condition: { type: String, required: true },
+  includedAccessories: { type: String },
   
   // Invoice / Ownership Proof
   invoiceUrl: { type: String },

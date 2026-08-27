@@ -12,6 +12,8 @@ import ProductDetails from './pages/ProductDetails';
 import AdminVerificationCenter from './pages/AdminVerificationCenter';
 import RecentActivityPage from './pages/RecentActivityPage';
 import Profile from './pages/Profile';
+import MyProducts from './pages/MyProducts';
+import AddProduct from './pages/AddProduct';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
@@ -34,6 +36,8 @@ function AppContent() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/history" element={<RecentActivityPage />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/my-products" element={<MyProducts />} />
+          <Route path="/add-product" element={<AddProduct />} />
           <Route path="/admin/verifications" element={<AdminVerificationCenter />} />
         </Routes>
       </main>

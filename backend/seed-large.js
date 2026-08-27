@@ -123,7 +123,20 @@ const seedLarge = async () => {
     
     const password = 'password123';
     
-    // 1. Generate 20 Random Providers
+    // 1. Generate Admin User
+    console.log("Generating Admin user...");
+    await User.create({
+      username: 'admin',
+      name: 'Super Admin',
+      email: 'admin@equipora.com',
+      phone: '9999999999',
+      password: password,
+      role: 'admin',
+      isVerified: true,
+      kycStatus: 'ACTIVE'
+    });
+    
+    // 2. Generate 20 Random Providers
     console.log("Generating 20 random authors/providers...");
     const providerIds = [];
     

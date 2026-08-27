@@ -13,6 +13,10 @@ const Navbar = () => {
   const [recentItems, setRecentItems] = useState([]);
   const historyRef = useRef(null);
 
+  // Profile Dropdown State
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const profileDropdownRef = useRef(null);
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -33,22 +37,25 @@ const Navbar = () => {
     }
   }, [isHistoryOpen]);
 
-  // Click outside to close history modal
+  // Click outside to close history modal and profile dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (historyRef.current && !historyRef.current.contains(event.target)) {
         setIsHistoryOpen(false);
       }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false);
+      }
     };
-    if (isHistoryOpen) document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isHistoryOpen]);
+  }, []);
 
   const isActive = (path) => location.pathname === path;
 
   return (
     <header 
-      className={`absolute top-0 left-0 right-0 z-[100] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] flex justify-center pt-3`}
+      className={`absolute top-0 left-0 right-0 z-40 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] flex justify-center pt-3`}
     >
       {/* 
         Ultra-Premium Floating Pill Navbar
@@ -77,7 +84,7 @@ const Navbar = () => {
               }`}
             >
               {isActive('/') && <div className="absolute inset-0 bg-gray-900 rounded-xl shadow-md -z-10 animate-fade-in"></div>}
-              {!isActive('/') && <div className="absolute inset-0 bg-white scale-y-0 group-hover:scale-y-100 transform origin-bottom transition-transform duration-300 rounded-xl -z-10 shadow-sm"></div>}
+              {!isActive('/') && <div className="absolute inset-0 bg-blue-100 scale-y-0 group-hover:scale-y-100 transform origin-bottom transition-transform duration-300 rounded-2xl -z-10 shadow-sm"></div>}
               <span className="relative z-10">Home</span>
             </Link>
 
@@ -88,7 +95,7 @@ const Navbar = () => {
               }`}
             >
               {isActive('/products') && <div className="absolute inset-0 bg-gray-900 rounded-xl shadow-md -z-10 animate-fade-in"></div>}
-              {!isActive('/products') && <div className="absolute inset-0 bg-white scale-y-0 group-hover:scale-y-100 transform origin-bottom transition-transform duration-300 rounded-xl -z-10 shadow-sm"></div>}
+              {!isActive('/products') && <div className="absolute inset-0 bg-blue-100 scale-y-0 group-hover:scale-y-100 transform origin-bottom transition-transform duration-300 rounded-2xl -z-10 shadow-sm"></div>}
               <span className="relative z-10 flex items-center">
                 Browse
               </span>
@@ -99,8 +106,9 @@ const Navbar = () => {
           <div className="flex items-center space-x-3 sm:space-x-4">
             
             {/* History Toggle Button */}
-            <div className="relative" ref={historyRef}>
-              <button 
+            {user && (
+              <div className="relative" ref={historyRef}>
+                <button 
                 onClick={() => setIsHistoryOpen(!isHistoryOpen)}
                 className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
                   (isActive('/history') || isHistoryOpen)
@@ -186,6 +194,7 @@ const Navbar = () => {
                 </div>
               )}
             </div>
+            )}
 
             {/* Auth Buttons */}
             {user ? (
@@ -213,31 +222,78 @@ const Navbar = () => {
                   Dashboard
                 </Link>
                 
-                <Link 
-                  to="/profile" 
-                  className={`px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${
-                    isActive('/profile') 
-                      ? 'bg-gray-900 text-white shadow-md' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
-                  }`}
-                >
-                  Profile
-                </Link>
-                <button 
-                  onClick={logout} 
-                  className="p-2.5 rounded-xl text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all duration-300 group"
-                  title="Logout"
-                >
-                  <svg className="w-5 h-5 transform group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                </button>
+                {/* Profile Dropdown */}
+                <div className="relative" ref={profileDropdownRef}>
+                  <button 
+                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                    className="flex items-center space-x-2 p-1 pl-3 pr-1.5 rounded-[1.25rem] bg-gray-100 hover:bg-gray-200 transition-all duration-300 group outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <span className="text-sm font-bold text-gray-700 group-hover:text-gray-900 hidden sm:block">{user.name?.split(' ')[0] || 'User'}</span>
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-inner">
+                      {user.name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                  </button>
+
+                  {isProfileDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-3 w-64 bg-white/95 backdrop-blur-xl border border-gray-100 rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] p-2 animate-fade-in-up z-50 overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-50/50 before:to-transparent before:z-[-1]">
+                      
+                      {/* User Info Header */}
+                      <div className="px-4 py-3 mb-1 border-b border-gray-50">
+                        <p className="text-sm font-bold text-gray-900 truncate">{user.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      </div>
+
+                      {/* Primary Action (Add Product) */}
+                      <Link 
+                        to="/add-product" 
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                        className="flex items-center w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold text-sm hover:shadow-[0_8px_20px_-6px_rgba(37,99,235,0.5)] hover:-translate-y-0.5 transition-all duration-300 mb-1 group"
+                      >
+                        <svg className="w-4 h-4 mr-2.5 transform group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                        Add New Product
+                      </Link>
+
+                      {/* Other Links */}
+                      <Link 
+                        to="/my-products" 
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                        className="flex items-center w-full px-4 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-sm font-semibold transition-colors"
+                      >
+                        <svg className="w-4 h-4 mr-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                        My Products
+                      </Link>
+
+                      <Link 
+                        to="/profile" 
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                        className="flex items-center w-full px-4 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-sm font-semibold transition-colors"
+                      >
+                        <svg className="w-4 h-4 mr-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        My Profile
+                      </Link>
+
+                      {/* Logout */}
+                      <button 
+                        onClick={() => { logout(); setIsProfileDropdownOpen(false); }} 
+                        className="flex items-center w-full px-4 py-2.5 mt-1 text-red-600 hover:bg-red-50 rounded-xl text-sm font-semibold transition-colors group"
+                      >
+                        <svg className="w-4 h-4 mr-2.5 text-red-400 group-hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="flex items-center space-x-2">
                 <Link 
                   to="/login" 
-                  className="hidden md:block px-5 py-2.5 rounded-xl text-sm font-black text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors duration-300"
+                  className="relative px-6 py-2.5 rounded-xl text-sm font-black text-white overflow-hidden shadow-[0_8px_20px_-6px_rgba(37,99,235,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(37,99,235,0.6)] transition-all duration-300 transform hover:-translate-y-0.5 group hidden md:block"
                 >
-                  Login
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-500 group-hover:scale-110"></div>
+                  <span className="relative z-10 flex items-center">
+                    Login
+                  </span>
                 </Link>
                 <Link 
                   to="/register" 
@@ -246,7 +302,6 @@ const Navbar = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-500 group-hover:scale-110"></div>
                   <span className="relative z-10 flex items-center">
                     Sign Up
-                    <svg className="w-4 h-4 ml-1.5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                   </span>
                 </Link>
               </div>
