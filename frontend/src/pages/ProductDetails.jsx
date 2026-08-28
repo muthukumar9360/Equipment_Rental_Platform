@@ -212,10 +212,10 @@ const ProductDetails = () => {
           <span className="font-semibold text-sm tracking-wide">Back to Marketplace</span>
         </button>
         
-        {/* Mosaic Square Gallery Grid - 6 Images */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+        {/* Mosaic Gallery Grid - 5 Column Layout */}
+        <div className="grid grid-cols-4 md:grid-cols-5 gap-2 md:gap-3">
           {/* Front Image (Massive Square Hero) */}
-          <div className="col-span-2 row-span-2 relative rounded-2xl md:rounded-r-none md:rounded-bl-none md:rounded-tl-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
+          <div className="col-span-2 row-span-2 relative rounded-2xl md:rounded-r-none md:rounded-bl-2xl md:rounded-tl-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
             <img 
               src={resolveUrl(product.frontImage) || resolveUrl(product.images?.[0]) || 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=1200&q=80'} 
               alt="Front View" 
@@ -223,28 +223,28 @@ const ProductDetails = () => {
             />
           </div>
           
-          {/* Back Image (Top Right Square) */}
-          <div className="hidden md:block col-span-1 row-span-1 relative md:rounded-tr-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
+          {/* Back Image (Square) */}
+          <div className="hidden md:block col-span-1 row-span-1 relative overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
             <img src={resolveUrl(product.backImage) || resolveUrl(product.images?.[1]) || 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80'} alt="Back View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
           </div>
 
-          {/* Left Image (Middle Right Square) */}
+          {/* Left Image (Square) */}
           <div className="hidden md:block col-span-1 row-span-1 relative overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
             <img src={resolveUrl(product.leftImage) || resolveUrl(product.images?.[2]) || 'https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=600&q=80'} alt="Left View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
           </div>
 
-          {/* Right Image (Bottom Left Square) */}
-          <div className="hidden md:block col-span-1 row-span-1 relative md:rounded-bl-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
+          {/* Right Image (Top Right Corner Square) */}
+          <div className="hidden md:block col-span-1 row-span-1 relative md:rounded-tr-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
             <img src={resolveUrl(product.rightImage) || resolveUrl(product.images?.[3]) || 'https://images.unsplash.com/photo-1513251703273-db987b50875e?auto=format&fit=crop&w=600&q=80'} alt="Right View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
           </div>
 
-          {/* Top Image (Bottom Middle Square) */}
+          {/* Top Image (Square) */}
           <div className="hidden md:block col-span-1 row-span-1 relative overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
             <img src={resolveUrl(product.topImage) || resolveUrl(product.images?.[4]) || 'https://images.unsplash.com/photo-1513251703273-db987b50875e?auto=format&fit=crop&w=600&q=80'} alt="Top View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
           </div>
 
-          {/* Bottom Image (Bottom Right Square) */}
-          <div className="hidden md:block col-span-1 row-span-1 relative md:rounded-br-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
+          {/* Bottom Image (Bottom Right Wide Rectangle) */}
+          <div className="hidden md:block col-span-2 row-span-1 relative md:rounded-br-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer" onClick={() => setIsGalleryOpen(true)}>
             <img src={resolveUrl(product.bottomImage) || resolveUrl(product.images?.[5]) || 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=600&q=80'} alt="Bottom View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
             <button 
               onClick={(e) => { e.stopPropagation(); setIsGalleryOpen(true); }}
