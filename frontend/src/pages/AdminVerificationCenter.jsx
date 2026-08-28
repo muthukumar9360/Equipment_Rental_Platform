@@ -155,7 +155,17 @@ const AdminDashboard = () => {
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           {loading ? (
-            <div className="p-16 text-center text-gray-500">Loading data...</div>
+            <div className="p-24 flex flex-col items-center justify-center space-y-5 bg-gray-50/50">
+              <div className="relative w-16 h-16">
+                {/* Background Ring */}
+                <div className="absolute inset-0 rounded-full border-[3px] border-gray-200"></div>
+                {/* Outer Spinning Ring */}
+                <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-gray-900 border-r-gray-900 animate-spin"></div>
+                {/* Inner Pulsating Dot */}
+                <div className="absolute inset-4 bg-gray-900 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.3)] animate-pulse"></div>
+              </div>
+              <p className="text-gray-900 font-black tracking-widest text-xs uppercase animate-pulse">Loading Data...</p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               

@@ -485,12 +485,13 @@ const AddProduct = () => {
               </button>
 
               {step < 3 ? (
-                <button type="button" onClick={nextStep} className="px-10 py-3.5 bg-gray-900 text-white font-black rounded-2xl hover:bg-black transition-all duration-300 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.3)] hover:-translate-y-1 flex items-center group">
+                <button key="continue-btn" type="button" onClick={nextStep} className="px-10 py-3.5 bg-gray-900 text-white font-black rounded-2xl hover:bg-black transition-all duration-300 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.3)] hover:-translate-y-1 flex items-center group">
                   Continue
                   <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
                 </button>
               ) : (
                 <button 
+                  key="submit-btn"
                   type="submit" 
                   disabled={loading}
                   onClick={handleSubmit}

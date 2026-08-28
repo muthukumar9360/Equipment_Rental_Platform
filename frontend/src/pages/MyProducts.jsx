@@ -33,8 +33,16 @@ const MyProducts = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 bg-gray-50 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+      <div className="min-h-screen pt-24 bg-gray-50 flex flex-col items-center justify-center space-y-5">
+        <div className="relative w-16 h-16">
+          {/* Background Ring */}
+          <div className="absolute inset-0 rounded-full border-[3px] border-gray-200"></div>
+          {/* Outer Spinning Ring */}
+          <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-gray-900 border-r-gray-900 animate-spin"></div>
+          {/* Inner Pulsating Dot */}
+          <div className="absolute inset-4 bg-gray-900 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.3)] animate-pulse"></div>
+        </div>
+        <p className="text-gray-900 font-black tracking-widest text-xs uppercase animate-pulse">Loading Data...</p>
       </div>
     );
   }
@@ -83,7 +91,7 @@ const MyProducts = () => {
 
         {/* Grid */}
         {filteredProducts.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-gray-200 p-12 text-center">
+          <div className="bg-white rounded-3xl border-2 border-gray-900 p-12 text-center">
             <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
             </div>
@@ -113,7 +121,7 @@ const MyProducts = () => {
 
               return (
                 <div key={product._id} className="relative group" style={{ perspective: '1000px' }}>
-                  <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm transition-all duration-500 ease-out flex flex-col h-full group-hover:shadow-[0_30px_50px_-12px_rgba(0,0,0,0.2)] group-hover:[transform:translateY(-8px)_rotateX(4deg)_rotateY(-2deg)_scale(1.02)]" style={{ transformStyle: 'preserve-3d' }}>
+                  <div className="bg-white rounded-2xl border border-gray-900 overflow-hidden shadow-sm transition-all duration-500 ease-out flex flex-col h-full group-hover:shadow-[0_30px_50px_-12px_rgba(0,0,0,0.2)] group-hover:[transform:translateY(-8px)_rotateX(4deg)_rotateY(-2deg)_scale(1.02)]" style={{ transformStyle: 'preserve-3d' }}>
                   <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
                     <img src={cleanUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute top-3 right-3">
@@ -122,7 +130,7 @@ const MyProducts = () => {
                       </span>
                     </div>
                   </div>
-                  <div className="p-5 flex-grow flex flex-col">
+                  <div className="p-5 flex-grow flex flex-col border-t border-gray-900 mt-5">
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <h3 className="font-extrabold text-gray-900 truncate">{product.name}</h3>
