@@ -10,8 +10,6 @@ const ProviderPreview = () => {
   const [allProviders, setAllProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPreview, setSelectedPreview] = useState(null);
-  
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
 
@@ -56,25 +54,43 @@ const ProviderPreview = () => {
   const totalPages = Math.ceil(allProviders.length / itemsPerPage);
   const currentProviders = allProviders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 4) {
+        pages.push(1, 2, 3, 4, 5, '...', totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+    return pages;
+  };
+
   return (
-    <div className="min-h-screen bg-white font-sans pb-5 animate-fade-in relative">
+    <div className="min-h-screen bg-white font-sans pb-5 animate-fade-in">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-4">
         
-        <div className="mb-3">
+        <div className="mb-6">
           <button 
             onClick={() => navigate(-1)}
-            className="flex items-center space-x-2 text-black hover:text-gray-900 transition-colors font-semibold bg-gray-50 px-4 py-2 rounded-full border border-gray-200 cursor-pointer"
+            className="flex items-center space-x-2 text-gray-500 hover:text-gray-900 transition-colors font-semibold bg-gray-50 px-4 py-2 rounded-full border border-gray-200"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
-            <span className="font-semibold text-sm tracking-wide">Back to Marketplace</span>
+            <span>Back to Marketplace</span>
           </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 pt-2">
           
           {/* LEFT SIDE (Product Focus) */}
-          <div className="lg:col-span-5 relative">
-            <div className="sticky top-28">
+          <div className="lg:col-span-5">
+            <div>
               
               <div className="w-full h-[400px] rounded-[32px] overflow-hidden shadow-sm relative bg-gray-100">
                 <img 
@@ -121,7 +137,7 @@ const ProviderPreview = () => {
               <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Compare Providers</h2>
               <p className="text-gray-500 text-lg mb-8">Select from multiple verified authors offering this exact equipment.</p>
               
-              <div className="space-y-6">
+              <div className="space-y-6 min-h-[600px]">
                 {currentProviders.map(providerProduct => {
                   const author = providerProduct.providerId;
                   const initials = author?.name?.charAt(0).toUpperCase() || 'U';
@@ -129,7 +145,7 @@ const ProviderPreview = () => {
                   return (
                     <div 
                       key={providerProduct._id} 
-                      className="group bg-white border-4 border-gray-300 hover:border-blue-400 rounded-[24px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.15)] transition-all duration-500 transform hover:-translate-y-2 flex flex-col sm:flex-row gap-6 cursor-pointer"
+                      className="group bg-white border-4 border-gray-100 hover:border-blue-400 rounded-[24px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.15)] transition-all duration-500 transform hover:-translate-y-2 flex flex-col sm:flex-row gap-6 cursor-pointer"
                       onClick={(e) => {
                         setSelectedPreview(providerProduct);
                       }}
@@ -182,8 +198,8 @@ const ProviderPreview = () => {
               </div>
 
               {/* Pagination Controls */}
-              {totalPages > 0 && (
-                <div className="mt-8 flex justify-center items-center space-x-2">
+              {totalPages > 1 && (
+                <div className="mt-10 flex justify-center items-center space-x-2">
                   <button 
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
@@ -193,18 +209,24 @@ const ProviderPreview = () => {
                   </button>
                   
                   <div className="flex space-x-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`w-10 h-10 rounded-lg flex items-center justify-center font-medium transition-colors ${
-                          currentPage === page 
-                            ? 'bg-blue-600 text-white shadow-md' 
-                            : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        {page}
-                      </button>
+                    {getPageNumbers().map((page, index) => (
+                      page === '...' ? (
+                        <span key={`ellipsis-${index}`} className="w-10 h-10 flex items-center justify-center text-gray-500 font-medium">
+                          ...
+                        </span>
+                      ) : (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-10 h-10 rounded-lg flex items-center justify-center font-medium transition-colors ${
+                            currentPage === page 
+                              ? 'bg-blue-600 text-white shadow-md' 
+                              : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
                     ))}
                   </div>
 

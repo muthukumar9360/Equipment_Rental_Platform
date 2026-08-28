@@ -97,7 +97,8 @@ const MyProducts = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map(product => {
-              const cleanUrl = product.images?.[0] ? (product.images[0].startsWith('http') ? product.images[0] : `http://localhost:5000${product.images[0].startsWith('/') ? '' : '/'}${product.images[0]}`) : 'https://via.placeholder.com/400';
+              const frontImageUrl = product.frontImage || product.images?.[0];
+              const cleanUrl = frontImageUrl ? (frontImageUrl.startsWith('http') ? frontImageUrl : `http://localhost:5000${frontImageUrl.startsWith('/') ? '' : '/'}${frontImageUrl}`) : 'https://via.placeholder.com/400';
               
               let statusBadge = '';
               if (product.verificationStatus === 'Verified') {
@@ -109,7 +110,8 @@ const MyProducts = () => {
               }
 
               return (
-                <div key={product._id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col">
+                <div key={product._id} className="relative group" style={{ perspective: '1000px' }}>
+                  <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm transition-all duration-500 ease-out flex flex-col h-full group-hover:shadow-[0_30px_50px_-12px_rgba(0,0,0,0.2)] group-hover:[transform:translateY(-8px)_rotateX(4deg)_rotateY(-2deg)_scale(1.02)]" style={{ transformStyle: 'preserve-3d' }}>
                   <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
                     <img src={cleanUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute top-3 right-3">
@@ -134,15 +136,25 @@ const MyProducts = () => {
                           <span className="text-xs text-gray-500 font-bold">/day</span>
                         </div>
                       </div>
-                      <Link 
-                        to={`/product/${product._id}`}
-                        className="p-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-900 hover:text-white transition-colors duration-300"
-                        title="View Listing"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                      </Link>
+                      <div className="flex space-x-2">
+                        <Link 
+                          to={`/my-product-preview/${product._id}`}
+                          className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors duration-300"
+                          title="Preview Listing"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        </Link>
+                        <Link 
+                          to={`/edit-product/${product._id}`}
+                          className="p-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-900 hover:text-white transition-colors duration-300"
+                          title="Edit Product"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </Link>
+                      </div>
                     </div>
                   </div>
+                </div>
                 </div>
               );
             })}

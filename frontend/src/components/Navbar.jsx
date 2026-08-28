@@ -55,7 +55,7 @@ const Navbar = () => {
 
   return (
     <header 
-      className={`absolute top-0 left-0 right-0 z-40 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] flex justify-center pt-3`}
+      className={`absolute top-0 left-0 right-0 z-50 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] flex justify-center pt-3`}
     >
       {/* 
         Ultra-Premium Floating Pill Navbar
@@ -235,7 +235,7 @@ const Navbar = () => {
                   </button>
 
                   {isProfileDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-3 w-64 bg-white/95 backdrop-blur-xl border border-gray-100 rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] p-2 animate-fade-in-up z-50 overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-50/50 before:to-transparent before:z-[-1]">
+                    <div className="absolute right-0 top-full mt-3 w-64 bg-white/95 backdrop-blur-xl border border-gray-900 rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] p-2 animate-fade-in-up z-[200] overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-50/50 before:to-transparent before:z-[-1]">
                       
                       {/* User Info Header */}
                       <div className="px-4 py-3 mb-1 border-b border-gray-50">

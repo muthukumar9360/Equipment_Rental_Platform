@@ -5,7 +5,6 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'mock_key');
 
 // @desc    Create new product listing
-// @route   POST /api/products
 const createProduct = async (req, res) => {
   try {
     const { name, category, subCategory, brand, model, specifications, pricePerDay, securityDeposit, description, serialNumber, accessories, condition, location, includedAccessories } = req.body;
@@ -13,21 +12,26 @@ const createProduct = async (req, res) => {
     let frontImage = '', backImage = '', leftImage = '', rightImage = '', topImage = '', bottomImage = '';
     let additionalImages = [];
 
+    const getFilePath = (file) => {
+      if (!file) return null;
+      return `${process.env.API_URL || 'http://localhost:5000'}/uploads/${file.filename}`;
+    };
+
     if (req.files) {
-      if (req.files['frontImage']) frontImage = req.files['frontImage'][0].path;
-      if (req.files['backImage']) backImage = req.files['backImage'][0].path;
-      if (req.files['leftImage']) leftImage = req.files['leftImage'][0].path;
-      if (req.files['rightImage']) rightImage = req.files['rightImage'][0].path;
-      if (req.files['topImage']) topImage = req.files['topImage'][0].path;
-      if (req.files['bottomImage']) bottomImage = req.files['bottomImage'][0].path;
+      if (req.files['frontImage']) frontImage = getFilePath(req.files['frontImage'][0]);
+      if (req.files['backImage']) backImage = getFilePath(req.files['backImage'][0]);
+      if (req.files['leftImage']) leftImage = getFilePath(req.files['leftImage'][0]);
+      if (req.files['rightImage']) rightImage = getFilePath(req.files['rightImage'][0]);
+      if (req.files['topImage']) topImage = getFilePath(req.files['topImage'][0]);
+      if (req.files['bottomImage']) bottomImage = getFilePath(req.files['bottomImage'][0]);
       if (req.files['additionalImages']) {
-        additionalImages = req.files['additionalImages'].map(file => file.path);
+        additionalImages = req.files['additionalImages'].map(file => getFilePath(file));
       }
     }
     
     let invoiceUrl = null;
     if (req.files && req.files['invoice']) {
-      invoiceUrl = req.files['invoice'][0].path;
+      invoiceUrl = getFilePath(req.files['invoice'][0]);
     }
 
     // Mock OCR using Gemini if key exists, else mock data
@@ -78,6 +82,7 @@ const createProduct = async (req, res) => {
 
     res.status(201).json(product);
   } catch (error) {
+    console.error('Error in createProduct:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -128,4 +133,70 @@ const getMyProducts = async (req, res) => {
   }
 };
 
-module.exports = { createProduct, getProducts, getProductById, getMyProducts };
+// @desc    Update existing product
+// @route   PUT /api/products/:id
+const updateProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    
+    if (product.providerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this product' });
+    }
+
+    const { name, category, subCategory, brand, model, specifications, pricePerDay, securityDeposit, description, serialNumber, accessories, condition, location, includedAccessories, keptAdditionalImages } = req.body;
+
+    const getFilePath = (file) => {
+      if (!file) return null;
+      return `${process.env.API_URL || 'http://localhost:5000'}/uploads/${file.filename}`;
+    };
+
+    if (req.files) {
+      if (req.files['frontImage']) product.frontImage = getFilePath(req.files['frontImage'][0]);
+      if (req.files['backImage']) product.backImage = getFilePath(req.files['backImage'][0]);
+      if (req.files['leftImage']) product.leftImage = getFilePath(req.files['leftImage'][0]);
+      if (req.files['rightImage']) product.rightImage = getFilePath(req.files['rightImage'][0]);
+      if (req.files['topImage']) product.topImage = getFilePath(req.files['topImage'][0]);
+      if (req.files['bottomImage']) product.bottomImage = getFilePath(req.files['bottomImage'][0]);
+      
+      let finalAdditionalImages = keptAdditionalImages ? JSON.parse(keptAdditionalImages) : [];
+      if (req.files['additionalImages']) {
+        const newAdditionalImages = req.files['additionalImages'].map(file => getFilePath(file));
+        finalAdditionalImages = [...finalAdditionalImages, ...newAdditionalImages];
+      }
+      product.additionalImages = finalAdditionalImages;
+      
+      if (req.files['invoice']) {
+        product.invoiceUrl = getFilePath(req.files['invoice'][0]);
+      }
+    } else if (keptAdditionalImages) {
+      product.additionalImages = JSON.parse(keptAdditionalImages);
+    }
+
+    if (name) product.name = name;
+    if (category) product.category = category;
+    if (subCategory) product.subCategory = subCategory;
+    if (brand) product.brand = brand;
+    if (model) product.model = model;
+    if (specifications) product.specifications = JSON.parse(specifications);
+    if (pricePerDay) product.pricePerDay = pricePerDay;
+    if (securityDeposit) product.securityDeposit = securityDeposit;
+    if (description) product.description = description;
+    if (serialNumber) product.serialNumber = serialNumber;
+    if (accessories) product.accessories = JSON.parse(accessories);
+    if (condition) product.condition = condition;
+    if (location) product.location = location;
+    if (includedAccessories !== undefined) product.includedAccessories = includedAccessories;
+    
+    // When a product is updated, it might require re-verification
+    product.verificationStatus = 'Pending';
+
+    const updatedProduct = await product.save();
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error('Error in updateProduct:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { createProduct, getProducts, getProductById, getMyProducts, updateProduct };

@@ -38,6 +38,7 @@ function AppContent() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/my-products" element={<MyProducts />} />
           <Route path="/add-product" element={<AddProduct />} />
+          <Route path="/edit-product/:id" element={<AddProduct />} />
           <Route path="/admin/verifications" element={<AdminVerificationCenter />} />
         </Routes>
       </main>

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
 
 const AddProduct = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = !!id;
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -25,6 +27,46 @@ const AddProduct = () => {
 
   const [images, setImages] = useState({ front: null, back: null, left: null, right: null, top: null, bottom: null, additional: [] });
   const [previews, setPreviews] = useState({ front: null, back: null, left: null, right: null, top: null, bottom: null, additional: [] });
+
+  useEffect(() => {
+    if (isEditMode) {
+      const fetchProduct = async () => {
+        try {
+          const res = await api.get(`/products/${id}`);
+          const p = res.data;
+          setFormData({
+            name: p.name || '',
+            category: p.category || '',
+            subCategory: p.subCategory || '',
+            brand: p.brand || '',
+            model: p.model || '',
+            serialNumber: p.serialNumber || '',
+            pricePerDay: p.pricePerDay || '',
+            securityDeposit: p.securityDeposit || '',
+            condition: p.condition || '',
+            location: p.location || 'Chennai',
+            includedAccessories: p.includedAccessories || '',
+            description: p.description || ''
+          });
+
+          const resolveUrl = (url) => url ? (url.startsWith('http') ? url : `http://localhost:5000${url.startsWith('/') ? '' : '/'}${url}`) : null;
+          
+          setPreviews({
+            front: resolveUrl(p.frontImage),
+            back: resolveUrl(p.backImage),
+            left: resolveUrl(p.leftImage),
+            right: resolveUrl(p.rightImage),
+            top: resolveUrl(p.topImage),
+            bottom: resolveUrl(p.bottomImage),
+            additional: p.additionalImages ? p.additionalImages.map(resolveUrl) : []
+          });
+        } catch (err) {
+          setError('Failed to load product for editing');
+        }
+      };
+      fetchProduct();
+    }
+  }, [id, isEditMode]);
 
   const categories = ['Cameras', 'Lenses', 'Lighting', 'Audio', 'Drones', 'Grip', 'Accessories'];
 
@@ -65,9 +107,9 @@ const AddProduct = () => {
 
   const handleAdditionalImages = (e) => {
     const files = Array.from(e.target.files);
-    setImages({ ...images, additional: [...images.additional, ...files].slice(0, 4) });
+    setImages({ ...images, additional: [...images.additional, ...files].slice(0, 5) });
     const urls = files.map(f => URL.createObjectURL(f));
-    setPreviews({ ...previews, additional: [...previews.additional, ...urls].slice(0, 4) });
+    setPreviews({ ...previews, additional: [...previews.additional, ...urls].slice(0, 5) });
   };
 
   const nextStep = () => {
@@ -92,8 +134,15 @@ const AddProduct = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!images.front || !images.back || !images.left || !images.right || !images.top || !images.bottom) {
-      setError('Please upload the 6 mandatory specific view images (Front, Back, Left, Right, Top, Bottom).');
+    
+    // If user presses Enter in step 1 or 2, just go to next step instead of submitting
+    if (step < 3) {
+      nextStep();
+      return;
+    }
+
+    if (!previews.front || !previews.back || !previews.left || !previews.right || !previews.top || !previews.bottom) {
+      setError('Please provide the 6 mandatory specific view images (Front, Back, Left, Right, Top, Bottom).');
       return;
     }
 
@@ -106,24 +155,29 @@ const AddProduct = () => {
         submitData.append(key, formData[key]);
       });
 
-      submitData.append('frontImage', images.front);
-      submitData.append('backImage', images.back);
-      submitData.append('leftImage', images.left);
-      submitData.append('rightImage', images.right);
-      submitData.append('topImage', images.top);
-      submitData.append('bottomImage', images.bottom);
+      if (images.front) submitData.append('frontImage', images.front);
+      if (images.back) submitData.append('backImage', images.back);
+      if (images.left) submitData.append('leftImage', images.left);
+      if (images.right) submitData.append('rightImage', images.right);
+      if (images.top) submitData.append('topImage', images.top);
+      if (images.bottom) submitData.append('bottomImage', images.bottom);
       
       images.additional.forEach(file => {
         submitData.append('additionalImages', file);
       });
 
-      await api.post('/products', submitData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      if (isEditMode) {
+        const keptAdditionalImages = previews.additional.filter(url => url.startsWith('http'));
+        submitData.append('keptAdditionalImages', JSON.stringify(keptAdditionalImages));
+        await api.put(`/products/${id}`, submitData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      } else {
+        await api.post('/products', submitData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      }
 
       navigate('/my-products');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit product');
+      console.error('Frontend Submit Error:', err.response?.data || err.message);
+      setError(err.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'submit'} product`);
       setLoading(false);
     }
   };
@@ -189,7 +243,7 @@ const AddProduct = () => {
 
           {/* 3D Decorative Floating Card */}
           <div className="relative z-10 mt-10 hidden lg:block" style={{ perspective: '1000px' }}>
-            <div className="w-full bg-gradient-to-tr from-white/10 to-white/30 backdrop-blur-xl border border-white/50 rounded-3xl p-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] transform rotate-x-0 rotate-y-0 hover:rotate-y-0 hover:rotate-x-10 transition-all duration-700 ease-out">
+            <div className="w-full bg-gradient-to-tr from-white/10 to-white/30 backdrop-blur-xl border border-white/50 rounded-3xl p-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] transform rotate-x-0 rotate-y-0 hover:rotate-y-10 hover:rotate-x-20 transition-all duration-700 ease-out">
               <div className="w-12 h-12 bg-blue-500/20 rounded-2xl mb-4 flex items-center justify-center shadow-inner">
                 <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
               </div>
@@ -353,7 +407,7 @@ const AddProduct = () => {
                       { id: 'top', label: 'Top View' },
                       { id: 'bottom', label: 'Bottom View' }
                     ].map(view => (
-                      <label key={view.id} className={`flex flex-col items-center justify-center w-full h-20 border-2 ${previews[view.id] ? 'border-blue-500 border-solid' : 'border-blue-300 border-dashed'} rounded-2xl cursor-pointer bg-blue-50/30 hover:bg-blue-50/80 transition-all duration-300 group overflow-hidden relative`}>
+                      <label key={view.id} className={`flex flex-col items-center justify-center w-full h-21 border-2 ${previews[view.id] ? 'border-blue-500 border-solid' : 'border-blue-300 border-dashed'} rounded-2xl cursor-pointer bg-blue-50/30 hover:bg-blue-50/80 transition-all duration-300 group overflow-hidden relative`}>
                         {previews[view.id] ? (
                           <img src={previews[view.id]} alt={view.label} className="absolute inset-0 w-full h-full object-cover" />
                         ) : (
@@ -369,26 +423,52 @@ const AddProduct = () => {
                 </div>
 
                 <div>
-                  <label className={labelClasses}>Additional Images</label>
-                  <p className="text-sm font-semibold text-gray-500 mb-5">Upload up to 4 additional images (accessories, close-ups, etc.)</p>
+                  <div className="flex justify-between items-end mb-4">
+                    <div>
+                      <label className={labelClasses}>Additional Images</label>
+                      <p className="text-sm font-semibold text-gray-500">Upload up to 5 additional images</p>
+                    </div>
+                    {previews.additional.length > 0 && (
+                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+                        {previews.additional.length} / 5
+                      </span>
+                    )}
+                  </div>
                   
-                  <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-blue-300 border-dashed rounded-2xl cursor-pointer bg-blue-50/30 hover:bg-blue-50/80 transition-all duration-300 group">
-                    <div className="flex flex-col items-center justify-center">
-                      <svg className="w-6 h-6 text-blue-600 mb-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                      <span className="text-xs font-bold text-gray-600">Click to add additional images</span>
-                    </div>
-                    <input type="file" className="hidden" multiple accept="image/*" onChange={handleAdditionalImages} />
-                  </label>
-
-                  {previews.additional.length > 0 && (
-                    <div className="grid grid-cols-5 gap-2 mt-4">
-                      {previews.additional.map((url, idx) => (
-                        <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-                          <img src={url} alt={`Additional ${idx}`} className="w-full h-full object-cover" />
+                  <div className="flex items-center gap-2 w-full overflow-x-auto pb-2 custom-scrollbar h-28">
+                    {/* Upload Button */}
+                    {previews.additional.length < 5 && (
+                      <label className="flex-shrink-0 flex flex-col items-center justify-center w-28 h-full border-2 border-blue-300 border-dashed rounded-2xl cursor-pointer bg-blue-50/30 hover:bg-blue-50/80 transition-all duration-300 group">
+                        <svg className="w-6 h-6 text-blue-600 mb-1 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                        <span className="text-[10px] font-bold text-gray-600 text-center leading-tight px-1">Add Image</span>
+                        <input type="file" className="hidden" multiple accept="image/*" onChange={handleAdditionalImages} />
+                      </label>
+                    )}
+                    
+                    {/* Previews */}
+                    {previews.additional.map((url, idx) => (
+                      <div key={idx} className="flex-shrink-0 w-28 h-full rounded-2xl overflow-hidden border-2 border-white shadow-[0_4px_12px_rgba(0,0,0,0.08)] relative group">
+                        <img src={url} alt={`Additional ${idx}`} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <button type="button" onClick={(e) => {
+                            e.preventDefault();
+                            const url = previews.additional[idx];
+                            if (url && url.startsWith('blob:')) {
+                              const blobIndex = previews.additional.slice(0, idx).filter(u => u && u.startsWith('blob:')).length;
+                              const newImages = [...images.additional];
+                              newImages.splice(blobIndex, 1);
+                              setImages({ ...images, additional: newImages });
+                            }
+                            const newPreviews = [...previews.additional];
+                            newPreviews.splice(idx, 1);
+                            setPreviews({ ...previews, additional: newPreviews });
+                          }} className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transform hover:scale-110 transition-all">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
               </div>
@@ -410,14 +490,20 @@ const AddProduct = () => {
                   <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
                 </button>
               ) : (
-                <button type="submit" disabled={loading} className="px-10 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl hover:shadow-[0_12px_25px_-6px_rgba(37,99,235,0.5)] transition-all duration-300 hover:-translate-y-1 flex items-center relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-white/20 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500"></div>
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  onClick={handleSubmit}
+                  className="px-8 py-3.5 bg-gray-900 text-white font-bold rounded-xl shadow-lg shadow-gray-200 hover:bg-black transition-all hover:-translate-y-0.5 disabled:opacity-70 flex items-center"
+                >
                   {loading ? (
-                    <span className="flex items-center relative z-10">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                      Submitting...
-                    </span>
-                  ) : <span className="relative z-10">Submit for Approval</span>}
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                      {isEditMode ? 'Updating...' : 'Submitting...'}
+                    </>
+                  ) : (
+                    isEditMode ? 'Update Product' : 'Submit for Verification'
+                  )}
                 </button>
               )}
             </div>

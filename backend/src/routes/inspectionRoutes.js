@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { generateChecklist, submitInspection } = require('../controllers/inspectionController');
 const { protect } = require('../middlewares/authMiddleware');
-const { upload } = require('../utils/cloudinary');
+const { upload } = require('../utils/upload');
 
 router.post('/generate-checklist', protect, generateChecklist);
 

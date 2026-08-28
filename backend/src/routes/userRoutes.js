@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { submitKyc, getPendingKyc, updateKycStatus } = require('../controllers/userController');
 const { protect, admin } = require('../middlewares/authMiddleware');
-const { upload } = require('../utils/cloudinary');
+const { upload } = require('../utils/upload');
 
 // Renter/Provider routes
 router.post('/kyc', protect, upload.fields([
