@@ -215,7 +215,7 @@ const AddProduct = () => {
 
           <div className="relative z-10">
             <h2 className="text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight mb-4 origin-left">
-              Add Your <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">Equipment</span>
+              {isEditMode ? 'Edit Your' : 'Add Your'} <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">Equipment</span>
             </h2>
             <p className="text-gray-400 text-lg font-medium max-w-md">Join the premium network of creators. Add your gear securely to start earning today.</p>
 
@@ -264,7 +264,7 @@ const AddProduct = () => {
           <form onSubmit={handleSubmit} className="relative z-10 flex flex-col flex-1">
             <div className="flex-1 min-h-[480px]">
             {/* STEP 1: Basic Details */}
-            <div className={`transition-all duration-500 ease-in-out ${step === 1 ? 'opacity-100 block transform translate-x-0' : 'opacity-0 hidden translate-x-8'}`}>
+            <div className={`transition-all duration-500 ease-in-out ${step === 1 ? 'opacity-100 block transform translate-x-0' : 'opacity-0 h-0 overflow-hidden pointer-events-none -translate-x-8'}`}>
               <div className="flex items-center mb-8">
                 <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center font-black text-xl mr-4">1</div>
                 <h3 className="text-2xl font-black text-gray-900 tracking-tight">Basic Details</h3>
@@ -322,8 +322,8 @@ const AddProduct = () => {
             </div>
 
             {/* STEP 2: Pricing & Description */}
-            <div className={`transition-all duration-500 ease-in-out ${step === 2 ? 'opacity-100 block transform translate-x-0' : 'opacity-0 hidden translate-x-8'}`}>
-              <div className="flex items-center mb-7">
+            <div className={`transition-all duration-500 ease-in-out ${step === 2 ? 'opacity-100 block transform translate-x-0' : 'opacity-0 h-0 overflow-hidden pointer-events-none translate-x-8'}`}>
+              <div className="flex items-center mb-8">
                 <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center font-black text-xl mr-4">2</div>
                 <h3 className="text-2xl font-black text-gray-900 tracking-tight">Pricing & Description</h3>
               </div>
@@ -386,7 +386,7 @@ const AddProduct = () => {
             </div>
 
             {/* STEP 3: Media */}
-            <div className={`transition-all duration-500 ease-in-out ${step === 3 ? 'opacity-100 block transform translate-x-0' : 'opacity-0 hidden translate-x-8'}`}>
+            <div className={`transition-all duration-500 ease-in-out ${step === 3 ? 'opacity-100 block transform translate-x-0' : 'opacity-0 h-0 overflow-hidden pointer-events-none translate-x-8'}`}>
               <div className="flex items-center mb-8">
                 <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center font-black text-xl mr-4">3</div>
                 <h3 className="text-2xl font-black text-gray-900 tracking-tight">Media Upload</h3>
@@ -478,10 +478,10 @@ const AddProduct = () => {
             <div className="flex justify-between mt-12 pt-8 border-t border-gray-100 mt-auto">
               <button
                 type="button"
-                onClick={prevStep}
-                className={`px-8 py-3.5 bg-gray-100 text-gray-700 font-bold rounded-2xl hover:bg-gray-200 transition-all duration-300 ${step === 1 ? 'invisible' : 'visible hover:-translate-x-1'}`}
+                onClick={() => step === 1 ? navigate(-1) : prevStep()}
+                className={`px-8 py-3.5 bg-gray-100 text-gray-700 font-bold rounded-2xl hover:bg-gray-200 transition-all duration-300 hover:-translate-x-1`}
               >
-                Back
+                {step === 1 ? 'Cancel & Close' : 'Back'}
               </button>
 
               {step < 3 ? (
@@ -499,10 +499,10 @@ const AddProduct = () => {
                   {loading ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                      {isEditMode ? 'Updating...' : 'Submitting...'}
+                      {isEditMode ? 'Saving...' : 'Adding...'}
                     </>
                   ) : (
-                    isEditMode ? 'Update Product' : 'Submit for Verification'
+                    isEditMode ? 'Save the equipment' : 'Add new equipment'
                   )}
                 </button>
               )}

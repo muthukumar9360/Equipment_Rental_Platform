@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import ProductQuickViewModal from '../components/ProductQuickViewModal';
 
 const MyProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
+  const [selectedPreview, setSelectedPreview] = useState(null);
 
   useEffect(() => {
     fetchProducts();
@@ -137,13 +139,13 @@ const MyProducts = () => {
                         </div>
                       </div>
                       <div className="flex space-x-2">
-                        <Link 
-                          to={`/my-product-preview/${product._id}`}
+                        <button 
+                          onClick={() => setSelectedPreview(product)}
                           className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors duration-300"
                           title="Preview Listing"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                        </Link>
+                        </button>
                         <Link 
                           to={`/edit-product/${product._id}`}
                           className="p-2.5 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-900 hover:text-white transition-colors duration-300"
@@ -160,8 +162,13 @@ const MyProducts = () => {
             })}
           </div>
         )}
-
       </div>
+
+      <ProductQuickViewModal 
+        isOpen={!!selectedPreview}
+        onClose={() => setSelectedPreview(null)}
+        product={selectedPreview}
+      />
     </div>
   );
 };

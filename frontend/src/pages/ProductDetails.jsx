@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useContext } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
+import { AuthContext } from '../context/AuthContext';
 
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
@@ -25,13 +26,12 @@ import ImageGalleryModal from '../components/ImageGalleryModal';
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const [product, setProduct] = useState(null);
   const [alternatives, setAlternatives] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   
-  // No dates selected initially
-  // No dates selected initially
   const [dates, setDates] = useState(null);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('18:00');
@@ -91,6 +91,9 @@ const ProductDetails = () => {
 
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center text-gray-500">Loading immersive experience...</div>;
   if (!product) return <div className="min-h-screen bg-white flex items-center justify-center text-gray-500">Product not found.</div>;
+
+  const isOwner = user && (product.providerId?._id === user._id || product.providerId === user._id);
+  const resolveUrl = (url) => url ? (url.startsWith('http') ? url : `http://localhost:5000${url.startsWith('/') ? '' : '/'}${url}`) : null;
 
   const getDays = () => {
     if (dates && dates.length === 2 && dates[0] && dates[1]) {
@@ -209,35 +212,40 @@ const ProductDetails = () => {
           <span className="font-semibold text-sm tracking-wide">Back to Marketplace</span>
         </button>
         
-        {/* Gallery Grid - 5 Image Premium Style */}
-        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-2 h-[350px] md:h-[500px]">
-          {/* Main Large Image */}
-          <div className="md:col-span-2 md:row-span-2 relative rounded-l-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer" onClick={() => setIsGalleryOpen(true)}>
+        {/* Gallery Grid - 6 Image 3x2 Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-2 h-[400px] md:h-[500px]">
+          {/* Front Image */}
+          <div className="relative rounded-tl-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer rounded-bl-2xl md:rounded-bl-none" onClick={() => setIsGalleryOpen(true)}>
             <img 
-              src={product.images?.[0] || 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=1200&q=80'} 
-              alt={product.name} 
+              src={resolveUrl(product.frontImage) || resolveUrl(product.images?.[0]) || 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=1200&q=80'} 
+              alt="Front View" 
               className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105"
             />
           </div>
           
-          {/* Top Middle Image */}
+          {/* Back Image */}
           <div className="hidden md:block relative overflow-hidden bg-gray-100 group shadow-sm cursor-pointer" onClick={() => setIsGalleryOpen(true)}>
-            <img src={product.images?.[1] || 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80'} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+            <img src={resolveUrl(product.backImage) || resolveUrl(product.images?.[1]) || 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80'} alt="Back View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
           </div>
 
-          {/* Top Right Image */}
+          {/* Left Image */}
           <div className="hidden md:block relative rounded-tr-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer" onClick={() => setIsGalleryOpen(true)}>
-            <img src={product.images?.[2] || 'https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=600&q=80'} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+            <img src={resolveUrl(product.leftImage) || resolveUrl(product.images?.[2]) || 'https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=600&q=80'} alt="Left View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
           </div>
 
-          {/* Bottom Middle Image */}
+          {/* Right Image */}
+          <div className="hidden md:block relative overflow-hidden bg-gray-100 group shadow-sm cursor-pointer md:rounded-bl-2xl" onClick={() => setIsGalleryOpen(true)}>
+            <img src={resolveUrl(product.rightImage) || resolveUrl(product.images?.[3]) || 'https://images.unsplash.com/photo-1513251703273-db987b50875e?auto=format&fit=crop&w=600&q=80'} alt="Right View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+          </div>
+
+          {/* Top Image */}
           <div className="hidden md:block relative overflow-hidden bg-gray-100 group shadow-sm cursor-pointer" onClick={() => setIsGalleryOpen(true)}>
-            <img src={product.images?.[3] || 'https://images.unsplash.com/photo-1513251703273-db987b50875e?auto=format&fit=crop&w=600&q=80'} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+            <img src={resolveUrl(product.topImage) || resolveUrl(product.images?.[4]) || 'https://images.unsplash.com/photo-1513251703273-db987b50875e?auto=format&fit=crop&w=600&q=80'} alt="Top View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
           </div>
 
-          {/* Bottom Right Image */}
+          {/* Bottom Image */}
           <div className="hidden md:block relative rounded-br-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer" onClick={() => setIsGalleryOpen(true)}>
-            <img src={product.images?.[4] || 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=600&q=80'} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+            <img src={resolveUrl(product.bottomImage) || resolveUrl(product.images?.[5]) || 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=600&q=80'} alt="Bottom View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
             <button 
               onClick={(e) => { e.stopPropagation(); setIsGalleryOpen(true); }}
               className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md text-gray-900 font-bold px-5 py-2.5 rounded-xl shadow-lg border border-white/20 hover:bg-white hover:scale-105 transition-all"
@@ -398,6 +406,8 @@ const ProductDetails = () => {
               </div>
             </div>
 
+            <div className="space-y-6">
+
             {/* Calendar Component */}
             <div className="mb-4 bg-gray-50 rounded-2xl p-4 border border-gray-100 shadow-inner">
               <Calendar 
@@ -435,12 +445,30 @@ const ProductDetails = () => {
               <p className="text-red-500 text-sm font-semibold mb-4 text-center animate-pulse">Please select valid dates and times for your trip</p>
             )}
 
-            <button 
-              disabled={!dates || dates.length !== 2 || dates[0]?.getTime() === dates[1]?.getTime() || !startTime || !endTime}
-              className="w-full py-4 rounded-2xl bg-blue-600 text-white font-bold text-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md transition-all transform hover:-translate-y-1 cursor-pointer"
-            >
-              Request to Rent
-            </button>
+            {isOwner ? (
+              <div className="flex flex-col space-y-3">
+                <button 
+                  disabled
+                  className="w-full py-4 rounded-2xl bg-gray-400 text-white font-bold text-lg cursor-not-allowed shadow-md"
+                >
+                  Preview Mode (Cannot Book)
+                </button>
+                <Link 
+                  to={`/edit-product/${product._id}`}
+                  className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg text-center transition-all shadow-md flex items-center justify-center"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                  Edit Product Details
+                </Link>
+              </div>
+            ) : (
+              <button 
+                disabled={!dates || dates.length !== 2 || dates[0]?.getTime() === dates[1]?.getTime() || !startTime || !endTime}
+                className="w-full py-4 rounded-2xl bg-blue-600 text-white font-bold text-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md transition-all transform hover:-translate-y-1 cursor-pointer"
+              >
+                Request to Rent
+              </button>
+            )}
 
             <div className="mt-6 pt-6 border-t border-gray-200">
               <div className="flex justify-between text-gray-600 mb-3 text-sm">
