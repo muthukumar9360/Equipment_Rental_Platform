@@ -110,6 +110,7 @@ const getProducts = async (req, res) => {
     }
     
     if (excludeId) query._id = { $ne: excludeId };
+    if (req.query.providerId) query.providerId = req.query.providerId;
 
     const limit = req.query.limit ? parseInt(req.query.limit) : 200;
 

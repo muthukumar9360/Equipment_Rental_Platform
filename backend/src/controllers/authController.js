@@ -272,7 +272,9 @@ const getUserProfile = async (req, res) => {
       kycStatus: user.kycStatus,
       kycData: user.kycData,
       trustScore: user.trustScore,
-      equiporaId: user.equiporaId
+      equiporaId: user.equiporaId,
+      likedProducts: user.likedProducts || [],
+      savedProducts: user.savedProducts || []
     });
   } else {
     res.status(404).json({ message: 'User not found' });

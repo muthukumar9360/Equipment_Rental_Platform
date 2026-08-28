@@ -31,6 +31,8 @@ const ProductDetails = () => {
   const [alternatives, setAlternatives] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   
   const [dates, setDates] = useState(null);
   const [startTime, setStartTime] = useState('09:00');
@@ -95,6 +97,33 @@ const ProductDetails = () => {
     };
     fetchProduct();
   }, [id]);
+
+  useEffect(() => {
+    if (user && product) {
+      setIsLiked(user.likedProducts?.includes(product._id) || false);
+      setIsSaved(user.savedProducts?.includes(product._id) || false);
+    }
+  }, [user, product]);
+
+  const handleLike = async () => {
+    if (!user) return alert("Please login first");
+    try {
+      const res = await api.post(`/users/like/${product._id}`);
+      setIsLiked(res.data.isLiked);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) return alert("Please login first");
+    try {
+      const res = await api.post(`/users/save/${product._id}`);
+      setIsSaved(res.data.isSaved);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const isOwner = user && (product?.providerId?._id === user._id || product?.providerId === user._id);
 
@@ -357,7 +386,7 @@ const ProductDetails = () => {
           </div>
 
           {/* Provider Info */}
-          <div className="flex items-center justify-between border-b border-gray-200 pb-8 pt-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-6 pt-5 gap-4">
             <div className="flex items-center space-x-4">
               <div className="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center text-white text-xl font-bold shadow-md">
                 {providerInitials}
@@ -367,9 +396,35 @@ const ProductDetails = () => {
                 <p className="text-xl font-bold text-gray-900">{product.providerId?.name || 'Unknown Provider'}</p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-3xl font-black text-blue-600">01</p>
-              <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Units Available</p>
+            
+            <div className="flex flex-wrap items-center gap-3">
+              <button 
+                onClick={() => navigate(`/profile/${product.providerId?._id}`)}
+                className="px-4 py-2 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-900 font-bold rounded-xl transition-all shadow-sm text-sm flex items-center"
+              >
+                View Profile
+              </button>
+              
+              <button 
+                onClick={handleLike}
+                className={`px-4 py-2 border font-bold rounded-xl transition-all shadow-sm text-sm flex items-center gap-2 ${isLiked ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100' : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-900'}`}
+              >
+                <svg className={`w-4 h-4 ${isLiked ? 'fill-current' : 'fill-none stroke-current stroke-2'}`} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                {isLiked ? 'Liked' : 'Like'}
+              </button>
+              
+              <button 
+                onClick={handleSave}
+                className={`px-4 py-2 border font-bold rounded-xl transition-all shadow-sm text-sm flex items-center gap-2 ${isSaved ? 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100' : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-900'}`}
+              >
+                <svg className={`w-4 h-4 ${isSaved ? 'fill-current' : 'fill-none stroke-current stroke-2'}`} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                {isSaved ? 'Saved' : 'Watch Later'}
+              </button>
+              
+              <div className="text-right ml-auto sm:ml-4 border-l border-gray-200 pl-4 hidden sm:block">
+                <p className="text-3xl font-black text-blue-600">01</p>
+                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mt-1">Units Available</p>
+              </div>
             </div>
           </div>
 

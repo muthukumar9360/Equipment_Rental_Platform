@@ -226,11 +226,13 @@ const Navbar = () => {
                 <div className="relative" ref={profileDropdownRef}>
                   <button 
                     onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                    className="flex items-center space-x-2 p-1 pl-3 pr-1.5 rounded-[1.25rem] bg-gray-100 hover:bg-gray-200 transition-all duration-300 group outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="flex items-center space-x-2 p-1.5 px-3 rounded-[1.25rem] bg-gray-100 hover:bg-gray-200 transition-all duration-300 group outline-none focus:ring-2 focus:ring-blue-500/20"
                   >
-                    <span className="text-sm font-bold text-gray-700 group-hover:text-gray-900 hidden sm:block">{user.name?.split(' ')[0] || 'User'}</span>
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-inner">
-                      {user.name?.charAt(0).toUpperCase() || 'U'}
+                    <span className="text-sm font-bold text-gray-700 group-hover:text-gray-900 hidden sm:block">{user.name?.split(' ')[0] || 'Menu'}</span>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 group-hover:text-gray-900">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
                     </div>
                   </button>
 
@@ -254,15 +256,6 @@ const Navbar = () => {
                       </Link>
 
                       {/* Other Links */}
-                      <Link 
-                        to="/my-products" 
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                        className="flex items-center w-full px-4 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-sm font-semibold transition-colors"
-                      >
-                        <svg className="w-4 h-4 mr-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                        My Products
-                      </Link>
-
                       <Link 
                         to="/profile" 
                         onClick={() => setIsProfileDropdownOpen(false)}

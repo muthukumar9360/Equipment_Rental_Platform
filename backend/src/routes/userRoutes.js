@@ -1,8 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const { submitKyc, getPendingKyc, updateKycStatus } = require('../controllers/userController');
+const { 
+  submitKyc, getPendingKyc, updateKycStatus,
+  updateProfile, getPublicProfile, followUser,
+  approveFollowRequest, rejectFollowRequest, unfollowUser,
+  toggleLikeProduct, toggleSaveProduct
+} = require('../controllers/userController');
 const { protect, admin } = require('../middlewares/authMiddleware');
 const { upload } = require('../utils/upload');
+
+// Profile & Social Routes
+router.put('/profile', protect, upload.single('profileImage'), updateProfile);
+router.get('/profile/:id', protect, getPublicProfile);
+router.post('/follow/:id', protect, followUser);
+router.post('/approve-follow/:id', protect, approveFollowRequest);
+router.post('/reject-follow/:id', protect, rejectFollowRequest);
+router.post('/unfollow/:id', protect, unfollowUser);
+router.post('/like/:id', protect, toggleLikeProduct);
+router.post('/save/:id', protect, toggleSaveProduct);
 
 // Renter/Provider routes
 router.post('/kyc', protect, upload.fields([

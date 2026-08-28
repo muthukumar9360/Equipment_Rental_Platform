@@ -24,6 +24,16 @@ const userSchema = new mongoose.Schema({
     pincode: { type: String }
   },
 
+  // Profile & Social Features
+  profileImage: { type: String }, // URL from cloudinary
+  bio: { type: String, maxlength: 500 },
+  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  followRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  likedProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+  savedProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+
+
   // Verification/KYC Fields
   equiporaId: { type: String, unique: true, sparse: true },
   kycStatus: { 

@@ -145,7 +145,7 @@ const ProviderPreview = () => {
                   return (
                     <div 
                       key={providerProduct._id} 
-                      className="group bg-white border-4 border-gray-100 hover:border-blue-400 rounded-[24px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.15)] transition-all duration-500 transform hover:-translate-y-2 flex flex-col sm:flex-row gap-6 cursor-pointer"
+                      className="group bg-white border-4 border-gray-100 hover:border-blue-400 rounded-[24px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.15)] transition-all duration-500 transform hover:-translate-y-2 flex flex-col sm:flex-row gap-6"
                       onClick={(e) => {
                         setSelectedPreview(providerProduct);
                       }}
@@ -164,7 +164,9 @@ const ProviderPreview = () => {
                             </div>
                             <div>
                               <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-0.5">Hosted By</p>
-                              <h3 className="text-lg font-extrabold text-gray-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">{author?.name || 'Unknown'}</h3>
+                              <h3 className="text-lg font-extrabold text-gray-900 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300 flex items-center gap-2">
+                                {author?.name || 'Unknown'}
+                              </h3>
                             </div>
                           </div>
                           <div className="bg-green-50 px-3 py-1 rounded-xl border border-green-100 flex items-center">
@@ -184,12 +186,22 @@ const ProviderPreview = () => {
                               <span className="text-gray-400 text-xs font-bold ml-1 uppercase tracking-wider mb-1.5">/ day</span>
                             </div>
                           </div>
-                          
-                          <button 
-                            className="mt-4 sm:mt-0 px-6 py-3 bg-gray-50 text-gray-600 border border-gray-200 text-sm font-extrabold rounded-xl group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 group-hover:shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300"
-                          >
-                            View Preview
-                          </button>
+                          <div className="mt-4 sm:mt-0 flex gap-2">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (author?._id) navigate(`/profile/${author._id}`);
+                              }}
+                              className="px-4 py-3 bg-white text-gray-900 border border-gray-200 text-sm font-extrabold rounded-xl hover:bg-black hover:text-white transition-all duration-300 cursor-pointer"
+                            >
+                              View Profile
+                            </button>
+                            <button 
+                              className="px-6 py-3 bg-gray-50 text-gray-600 border border-gray-200 text-sm font-extrabold rounded-xl group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 group-hover:shadow-[0_8px_20px_rgba(37,99,235,0.4)] transition-all duration-300 cursor-pointer"
+                            >
+                              View Preview
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
