@@ -484,13 +484,10 @@ const ProductDetails = () => {
                 <span className="text-blue-600">₹{totalPrice + product.securityDeposit}</span>
               </div>
             </div>
-            
+            </div>
           </div>
         </div>
-
-
       </div>
-
       </div>
 
       <ImageGalleryModal 
