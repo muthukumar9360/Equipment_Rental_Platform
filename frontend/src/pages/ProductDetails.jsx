@@ -108,7 +108,7 @@ const ProductDetails = () => {
   const mapCenter = [11.1271, 78.6569];
 
   return (
-    <div className="min-h-screen bg-white font-sans pb-15 relative">
+    <div className="min-h-screen bg-white font-sans pb-10 relative">
       <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-4">
       
       {/* Light Calendar Override Styles injected safely */}
@@ -317,7 +317,7 @@ const ProductDetails = () => {
               </div>
               
               <div className="bg-white border border-gray-200 shadow-sm overflow-hidden p-1">
-                <div className="grid grid-cols-1 divide-y divide-gray-100">
+                <div className="grid grid-cols-1 divide-y divide-gray-100 max-h-[500px] overflow-y-auto custom-scrollbar">
                   {alternatives.map((alt) => (
                     <div 
                       key={alt._id} 

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createProduct, getProducts, getProductById, getMyProducts, updateProduct } = require('../controllers/productController');
+const { createProduct, getProducts, getProductById, getMyProducts, updateProduct, getProductMetadata } = require('../controllers/productController');
 const { protect } = require('../middlewares/authMiddleware');
 const { upload } = require('../utils/upload');
 
@@ -8,6 +8,7 @@ const { upload } = require('../utils/upload');
 router.get('/my-products', protect, getMyProducts);
 
 // Public routes
+router.get('/metadata', getProductMetadata);
 router.get('/', getProducts);
 router.get('/:id', getProductById);
 

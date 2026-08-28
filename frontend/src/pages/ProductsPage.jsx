@@ -49,6 +49,19 @@ const ProductsPage = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+  const [metadata, setMetadata] = useState({ categories: [], locations: [], brands: [], subCategories: [] });
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const { data } = await api.get('/products/metadata');
+        setMetadata(data);
+      } catch (error) {
+        console.error('Error fetching metadata', error);
+      }
+    };
+    fetchMetadata();
+  }, []);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -79,8 +92,19 @@ const ProductsPage = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
+      setLoading(true);
       try {
-        const { data } = await api.get('/products');
+        let query = `/products?limit=200`;
+        if (appliedSearchTerm) query += `&search=${encodeURIComponent(appliedSearchTerm)}`;
+        if (selectedCategory) query += `&category=${encodeURIComponent(selectedCategory)}`;
+        if (selectedSubCategory) query += `&subCategory=${encodeURIComponent(selectedSubCategory)}`;
+        if (selectedLocation) query += `&location=${encodeURIComponent(selectedLocation)}`;
+        if (maxPrice < 10000) query += `&maxPrice=${maxPrice}`;
+        if (minTrustScore > 0) query += `&minTrustScore=${minTrustScore}`;
+        if (minConditionScore > 0) query += `&minConditionScore=${minConditionScore}`;
+        if (selectedBrand) query += `&brand=${encodeURIComponent(selectedBrand)}`;
+        
+        const { data } = await api.get(query);
         setProducts(data);
       } catch (error) {
         console.error('Error fetching products', error);
@@ -89,12 +113,12 @@ const ProductsPage = () => {
       }
     };
     fetchProducts();
-  }, []);
+  }, [appliedSearchTerm, selectedCategory, selectedSubCategory, selectedLocation, maxPrice, minTrustScore, minConditionScore, selectedBrand, verificationStatus]);
 
   if (loading) return <div className="text-center py-20 text-gray-500">Loading equipment...</div>;
 
-  const categories = [...new Set(products.map(p => p.category))].sort();
-  const locations = [...new Set(products.map(p => p.location).filter(Boolean))].sort();
+  const categories = metadata.categories.sort();
+  const locations = metadata.locations.sort();
   const groupedLocations = locations.reduce((acc, loc) => {
     const [district, area] = loc.split(' - ');
     if (district && area) {
@@ -103,16 +127,9 @@ const ProductsPage = () => {
     }
     return acc;
   }, {});
-  const brands = [...new Set(products.map(p => p.brand).filter(Boolean))].sort();
+  const brands = metadata.brands.sort();
 
-  const subCategoriesMap = {
-    "Cameras": ["DSLR", "Mirrorless", "Cinema", "Action Cams", "360 Cameras"],
-    "Drones": ["Photography", "FPV Racing", "Enterprise", "Underwater"],
-    "Audio Gear": ["Microphones", "Mixers", "Speakers", "Recorders"],
-    "Power Tools": ["Drills", "Saws", "Generators", "Sanders", "Compressors"],
-    "Lighting": ["Continuous", "Strobes", "Modifiers", "Stands"],
-    "Vehicles": ["Vans", "Trucks", "Trailers", "ATVs"]
-  };
+  const availableSubCategories = metadata.subCategories.sort();
 
   const filteredProducts = products.filter(product => {
     const searchLower = appliedSearchTerm.toLowerCase();
@@ -261,7 +278,7 @@ const ProductsPage = () => {
                 >
                   All in {selectedCategory}
                 </li>
-                {subCategoriesMap[selectedCategory]?.map(sub => (
+                {availableSubCategories && availableSubCategories.map(sub => (
                   <li 
                     key={sub}
                     className={`px-4 py-3 cursor-pointer hover:bg-indigo-50 text-sm font-medium ${selectedSubCategory === sub ? 'text-indigo-600 bg-indigo-50/50' : 'text-gray-700'}`}

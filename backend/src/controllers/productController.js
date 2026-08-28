@@ -98,10 +98,41 @@ const getProducts = async (req, res) => {
     if (model) query.model = model;
     if (category) query.category = category;
     if (subCategory) query.subCategory = subCategory;
+    if (req.query.location) query.location = req.query.location;
+    if (req.query.maxPrice) query.pricePerDay = { $lte: Number(req.query.maxPrice) };
+    if (req.query.minTrustScore) query.trustScore = { $gte: Number(req.query.minTrustScore) };
+    if (req.query.minConditionScore) query.conditionScore = { $gte: Number(req.query.minConditionScore) };
+    if (req.query.search) {
+      query.$or = [
+        { name: { $regex: req.query.search, $options: 'i' } },
+        { brand: { $regex: req.query.search, $options: 'i' } }
+      ];
+    }
+    
     if (excludeId) query._id = { $ne: excludeId };
 
-    const products = await Product.find(query).populate('providerId', 'name trustScore');
+    const limit = req.query.limit ? parseInt(req.query.limit) : 200;
+
+    const products = await Product.find(query)
+      .limit(limit)
+      .populate('providerId', 'name trustScore');
+      
     res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get product metadata (unique categories, brands, locations, etc.)
+// @route   GET /api/products/metadata
+const getProductMetadata = async (req, res) => {
+  try {
+    const categories = await Product.distinct('category', { verificationStatus: 'Verified' });
+    const locations = await Product.distinct('location', { verificationStatus: 'Verified' });
+    const brands = await Product.distinct('brand', { verificationStatus: 'Verified' });
+    const subCategories = await Product.distinct('subCategory', { verificationStatus: 'Verified' });
+    
+    res.json({ categories, locations, brands, subCategories });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -199,4 +230,4 @@ const updateProduct = async (req, res) => {
   }
 };
 
-module.exports = { createProduct, getProducts, getProductById, getMyProducts, updateProduct };
+module.exports = { createProduct, getProducts, getProductById, getMyProducts, updateProduct, getProductMetadata };

@@ -339,7 +339,7 @@ const Login = () => {
                     Create Account
                   </Link>
                 </div>
-                <Link to="/" className="inline-flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-xl font-bold">
+                <Link to="/" className="inline-flex items-center justify-center text-gray-500 hover:text-gray-900 transition-colors bg-gray-100 hover:bg-gray-200 px-4 py-2 mt-2 rounded-xl font-bold">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                   Back to Home
                 </Link>

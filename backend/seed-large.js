@@ -59,6 +59,19 @@ const seedLarge = async () => {
       kycStatus: 'ACTIVE'
     });
     
+    // 1.5 Generate Specific Customer User
+    console.log("Generating Muthukumar user...");
+    await User.create({
+      username: 'muthukumar_9360',
+      name: 'Muthukumar',
+      email: 'muthukumar@equipora.com',
+      phone: '9360000000',
+      password: 'Muthukumar12',
+      role: 'user',
+      isVerified: true,
+      kycStatus: 'ACTIVE'
+    });
+    
     // 2. Generate 50 Random Providers
     console.log("Generating 50 random authors/providers...");
     const providerIds = [];
