@@ -4,13 +4,16 @@ const {
   submitKyc, getPendingKyc, updateKycStatus,
   updateProfile, getPublicProfile, followUser,
   approveFollowRequest, rejectFollowRequest, unfollowUser,
-  toggleLikeProduct, toggleSaveProduct
+  toggleLikeProduct, toggleSaveProduct,
+  getLikedProducts, getSavedProducts
 } = require('../controllers/userController');
 const { protect, admin } = require('../middlewares/authMiddleware');
 const { upload } = require('../utils/upload');
 
 // Profile & Social Routes
 router.put('/profile', protect, upload.single('profileImage'), updateProfile);
+router.get('/liked', protect, getLikedProducts);
+router.get('/saved', protect, getSavedProducts);
 router.get('/profile/:id', protect, getPublicProfile);
 router.post('/follow/:id', protect, followUser);
 router.post('/approve-follow/:id', protect, approveFollowRequest);

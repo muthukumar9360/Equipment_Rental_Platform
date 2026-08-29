@@ -257,7 +257,7 @@ const logoutUser = (req, res) => {
 // @desc    Get user profile
 // @route   GET /api/auth/profile
 const getUserProfile = async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id).populate('followRequests', 'name username profileImage');
 
   if (user) {
     res.json({
@@ -274,7 +274,8 @@ const getUserProfile = async (req, res) => {
       trustScore: user.trustScore,
       equiporaId: user.equiporaId,
       likedProducts: user.likedProducts || [],
-      savedProducts: user.savedProducts || []
+      savedProducts: user.savedProducts || [],
+      followRequests: user.followRequests || []
     });
   } else {
     res.status(404).json({ message: 'User not found' });

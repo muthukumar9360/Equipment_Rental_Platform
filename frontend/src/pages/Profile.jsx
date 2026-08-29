@@ -22,6 +22,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('All');
   const tabs = ['All', 'Verified', 'Pending', 'Rejected'];
 
+  const [productSearchTerm, setProductSearchTerm] = useState('');
   const [publicCategory, setPublicCategory] = useState('');
   const [publicSubCategory, setPublicSubCategory] = useState('');
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
@@ -37,6 +38,11 @@ const Profile = () => {
   const [editImage, setEditImage] = useState(null);
   const [editImagePreview, setEditImagePreview] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  // Social Features State
+  const [activeModal, setActiveModal] = useState(null); // 'followers', 'following', 'requests'
+  const [likedProducts, setLikedProducts] = useState(new Set());
+  const [savedProducts, setSavedProducts] = useState(new Set());
 
   const isOwnProfile = !id || (user && id === user._id);
   const targetId = isOwnProfile ? user?._id : id;
@@ -68,6 +74,13 @@ const Profile = () => {
     }
   };
 
+  useEffect(() => {
+    if (user) {
+      setLikedProducts(new Set(user.likedProducts || []));
+      setSavedProducts(new Set(user.savedProducts || []));
+    }
+  }, [user]);
+
   const fetchProfile = async () => {
     try {
       const { data } = await api.get(`/users/profile/${targetId}`);
@@ -82,7 +95,7 @@ const Profile = () => {
       // Optimistic update for instant feedback
       setProfileData(prev => ({
         ...prev,
-        followRequests: [...(prev.followRequests || []), user?._id]
+        followers: [...(prev.followers || []), user]
       }));
 
       await api.post(`/users/follow/${targetId}`);
@@ -109,21 +122,12 @@ const Profile = () => {
     }
   };
 
-  const handleApproveRequest = async (requesterId) => {
-    try {
-      await api.post(`/users/approve-follow/${requesterId}`);
-      fetchProfile();
-    } catch (err) {
-      alert('Error approving request');
-    }
-  };
-
-  const handleRejectRequest = async (requesterId) => {
+  const handleDismissNotification = async (requesterId) => {
     try {
       await api.post(`/users/reject-follow/${requesterId}`);
       fetchProfile();
     } catch (err) {
-      alert('Error rejecting request');
+      alert('Error dismissing notification');
     }
   };
 
@@ -159,6 +163,38 @@ const Profile = () => {
     }
   };
 
+  const handleLike = async (productId, e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (!user) return alert('Please login to like products');
+    try {
+      const { data } = await api.post(`/users/like/${productId}`);
+      setLikedProducts(prev => {
+        const newSet = new Set(prev);
+        if (data.isLiked) newSet.add(productId);
+        else newSet.delete(productId);
+        return newSet;
+      });
+    } catch (err) {
+      console.error('Error liking product', err);
+    }
+  };
+
+  const handleSave = async (productId, e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (!user) return alert('Please login to save products');
+    try {
+      const { data } = await api.post(`/users/save/${productId}`);
+      setSavedProducts(prev => {
+        const newSet = new Set(prev);
+        if (data.isSaved) newSet.add(productId);
+        else newSet.delete(productId);
+        return newSet;
+      });
+    } catch (err) {
+      console.error('Error saving product', err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen pt-24 bg-white flex flex-col items-center justify-center space-y-5">
@@ -177,6 +213,8 @@ const Profile = () => {
 
   const isFollowing = profileData.followers?.some(f => f._id === user?._id || f === user?._id);
   const isRequested = profileData.followRequests?.some(r => r._id === user?._id || r === user?._id);
+  
+  const isAdminProfile = profileData?.role === 'admin' || (isOwnProfile && user?.role === 'admin');
 
   let filteredProducts = userProducts;
   
@@ -185,7 +223,11 @@ const Profile = () => {
       ? userProducts 
       : userProducts.filter(p => p.verificationStatus === activeTab);
   } else {
-    // For public profile, apply category and subcategory filters
+    // For public profile, apply category, subcategory and search filters
+    if (productSearchTerm) {
+      const lowerSearch = productSearchTerm.toLowerCase();
+      filteredProducts = filteredProducts.filter(p => p.name?.toLowerCase().includes(lowerSearch));
+    }
     if (publicCategory) {
       filteredProducts = filteredProducts.filter(p => p.category === publicCategory);
     }
@@ -235,6 +277,7 @@ const Profile = () => {
             
             {/* Header Actions Overlay (Share etc) */}
             <div className="absolute top-6 right-6 flex gap-3 z-10">
+
               <button 
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
@@ -284,7 +327,7 @@ const Profile = () => {
                     </h1>
                     <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
                       <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider rounded-lg border border-indigo-100">
-                        {profileData.role === 'admin' ? 'Admin' : 'Verified Member'}
+                        {isAdminProfile ? 'Admin' : 'Verified Member'}
                       </span>
                       <span className="flex items-center text-sm font-bold text-gray-500">
                         <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -308,7 +351,7 @@ const Profile = () => {
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                         Edit Profile
                       </button>
-                    ) : (
+                    ) : !isAdminProfile ? (
                       <>
                         <button className="px-6 py-3 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-900 font-bold rounded-xl transition-all shadow-sm text-sm">
                           Message
@@ -336,7 +379,7 @@ const Profile = () => {
                           </button>
                         )}
                       </>
-                    )}
+                    ) : null}
                   </div>
                 </div>
 
@@ -346,11 +389,17 @@ const Profile = () => {
                     <p className="text-3xl font-black text-gray-900 tracking-tight">{userProducts.length}</p>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Products</p>
                   </div>
-                  <div className="text-center">
+                  <div 
+                    className="text-center cursor-pointer hover:opacity-80 transition-opacity" 
+                    onClick={() => setActiveModal('followers')}
+                  >
                     <p className="text-3xl font-black text-gray-900 tracking-tight">{profileData.followers?.length || 0}</p>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Followers</p>
                   </div>
-                  <div className="text-center">
+                  <div 
+                    className="text-center cursor-pointer hover:opacity-80 transition-opacity" 
+                    onClick={() => setActiveModal('following')}
+                  >
                     <p className="text-3xl font-black text-gray-900 tracking-tight">{profileData.following?.length || 0}</p>
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Following</p>
                   </div>
@@ -365,27 +414,10 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Pending Requests (Only for Owner) */}
-        {isOwnProfile && profileData.followRequests?.length > 0 && (
-          <div className="mb-12 bg-gray-50 rounded-2xl p-6 border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-black mb-4 text-gray-900">Follow Requests</h3>
-            <div className="space-y-3">
-              {profileData.followRequests.map(reqId => (
-                <div key={reqId} className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                  <span className="font-bold text-sm text-gray-700">User ID: {reqId}</span>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleApproveRequest(reqId)} className="px-5 py-2 bg-blue-600 text-white text-xs font-black tracking-wide uppercase rounded-lg hover:bg-blue-700 transition-colors shadow-sm">Approve</button>
-                    <button onClick={() => handleRejectRequest(reqId)} className="px-5 py-2 bg-gray-100 text-gray-600 text-xs font-black tracking-wide uppercase rounded-lg hover:bg-gray-200 transition-colors border border-gray-200">Reject</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* User's Products Grid */}
-        <div className="mt-0 px-5">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        {/* User's Products Grid (Hidden for Admins) */}
+        {!isAdminProfile && (
+          <div className="mt-0 px-5">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
     
             {isOwnProfile && (
               <div className="flex space-x-2 mr-2 pb-2 scrollbar-hide w-full md:w-auto">
@@ -417,7 +449,19 @@ const Profile = () => {
             </h3>
             
             {!isOwnProfile && userProducts.length > 0 && (
-              <div className="flex space-x-3 w-full md:w-auto mt-4 md:mt-0">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full md:w-auto mt-4 md:mt-0">
+                {/* Search Bar */}
+                <div className="relative w-full sm:w-[220px]">
+                  <input 
+                    type="text" 
+                    placeholder="Search products..."
+                    value={productSearchTerm}
+                    onChange={(e) => { setProductSearchTerm(e.target.value); setCurrentPage(1); }}
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 hover:border-blue-400 focus:border-blue-500 rounded-xl text-sm font-bold text-gray-700 shadow-sm outline-none transition-all"
+                  />
+                  <svg className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </div>
+                
                 {/* Category Dropdown */}
                 <div 
                   className="relative" 
@@ -528,8 +572,26 @@ const Profile = () => {
                     />
                     
                     {/* Gradient Overlays */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent"></div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+
+                    {/* Like & Save Buttons - Top Right */}
+                    {!isOwnProfile && (
+                      <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+                        <button 
+                          onClick={(e) => handleLike(product._id, e)}
+                          className={`w-9 h-9 rounded-full backdrop-blur-md flex items-center justify-center transition-all ${likedProducts.has(product._id) ? 'bg-red-500 text-white' : 'bg-white/20 text-white hover:bg-white/40 border border-white/20'}`}
+                        >
+                          <svg className="w-5 h-5" fill={likedProducts.has(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                        </button>
+                        <button 
+                          onClick={(e) => handleSave(product._id, e)}
+                          className={`w-9 h-9 rounded-full backdrop-blur-md flex items-center justify-center transition-all ${savedProducts.has(product._id) ? 'bg-yellow-500 text-white' : 'bg-white/20 text-white hover:bg-white/40 border border-white/20'}`}
+                        >
+                          <svg className="w-5 h-5" fill={savedProducts.has(product._id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                        </button>
+                      </div>
+                    )}
 
                     {/* Category Badge - Top Left */}
                     <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-sm border border-white/20">
@@ -635,6 +697,7 @@ const Profile = () => {
             </>
           )}
         </div>
+        )}
 
       </div>
 
@@ -705,6 +768,69 @@ const Profile = () => {
         onClose={() => setSelectedPreviewProduct(null)}
         product={selectedPreviewProduct}
       />
+
+      {/* Social Connection Modals */}
+      {activeModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-md rounded-[2rem] border border-gray-200 overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
+              <h3 className="text-xl font-black text-gray-900 capitalize">
+                {activeModal === 'followers' && 'Followers'}
+                {activeModal === 'following' && 'Following'}
+              </h3>
+              <button onClick={() => setActiveModal(null)} className="p-2 bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <div className="p-2 overflow-y-auto grow">
+              {/* Followers List */}
+              {activeModal === 'followers' && (
+                profileData.followers?.length === 0 ? (
+                  <p className="text-center text-gray-500 py-5 font-medium">No followers yet.</p>
+                ) : (
+                  <div className="space-y-1">
+                    {profileData.followers?.map(f => (
+                      <Link to={`/profile/${f._id}`} key={f._id} onClick={() => setActiveModal(null)} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                        <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-200">
+                          {f.profileImage ? <img src={f.profileImage} alt="" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-lg">{f.name?.charAt(0)}</div>}
+                        </div>
+                        <div className="grow overflow-hidden">
+                          <p className="font-bold text-gray-900 text-sm truncate">{f.username}</p>
+                          <p className="text-gray-500 text-xs truncate">{f.name}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )
+              )}
+
+              {/* Following List */}
+              {activeModal === 'following' && (
+                profileData.following?.length === 0 ? (
+                  <p className="text-center text-gray-500 py-5 font-medium">Not following anyone yet.</p>
+                ) : (
+                  <div className="space-y-1">
+                    {profileData.following?.map(f => (
+                      <Link to={`/profile/${f._id}`} key={f._id} onClick={() => setActiveModal(null)} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                        <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-200">
+                          {f.profileImage ? <img src={f.profileImage} alt="" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-lg">{f.name?.charAt(0)}</div>}
+                        </div>
+                        <div className="grow overflow-hidden">
+                          <p className="font-bold text-gray-900 text-sm truncate">{f.username}</p>
+                          <p className="text-gray-500 text-xs truncate">{f.name}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )
+              )}
+
+
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

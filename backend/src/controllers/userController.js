@@ -114,9 +114,10 @@ const updateProfile = async (req, res) => {
 const getPublicProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .select('name username bio profileImage followers following followRequests trustScore isVerified kycStatus')
+      .select('name username bio profileImage followers following followRequests trustScore isVerified kycStatus role')
       .populate('followers', 'name username profileImage')
-      .populate('following', 'name username profileImage');
+      .populate('following', 'name username profileImage')
+      .populate('followRequests', 'name username profileImage');
       
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
@@ -125,7 +126,7 @@ const getPublicProfile = async (req, res) => {
   }
 };
 
-// @desc    Follow a user (send request)
+// @desc    Follow a user directly (and send notification)
 // @route   POST /api/users/follow/:id
 const followUser = async (req, res) => {
   try {
@@ -134,6 +135,8 @@ const followUser = async (req, res) => {
     }
 
     const targetUser = await User.findById(req.params.id);
+    const currentUser = await User.findById(req.user._id);
+
     if (!targetUser) return res.status(404).json({ message: 'User not found' });
 
     // Check if already following
@@ -141,15 +144,19 @@ const followUser = async (req, res) => {
       return res.status(400).json({ message: 'Already following this user' });
     }
 
-    // Check if request already sent
-    if (targetUser.followRequests.includes(req.user._id)) {
-      return res.status(400).json({ message: 'Follow request already sent' });
+    // Direct Follow Logic
+    targetUser.followers.push(req.user._id);
+    currentUser.following.push(targetUser._id);
+
+    // Use followRequests as a notification queue for the target user
+    if (!targetUser.followRequests.includes(req.user._id)) {
+      targetUser.followRequests.push(req.user._id);
     }
 
-    targetUser.followRequests.push(req.user._id);
     await targetUser.save();
+    await currentUser.save();
 
-    res.json({ message: 'Follow request sent' });
+    res.json({ message: 'Successfully followed user' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -277,6 +284,30 @@ const toggleSaveProduct = async (req, res) => {
   }
 };
 
+// @desc    Get Liked Products
+// @route   GET /api/users/liked
+const getLikedProducts = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate('likedProducts');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user.likedProducts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get Saved Products
+// @route   GET /api/users/saved
+const getSavedProducts = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate('savedProducts');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user.savedProducts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = { 
   submitKyc, 
   getPendingKyc, 
@@ -288,5 +319,7 @@ module.exports = {
   rejectFollowRequest,
   unfollowUser,
   toggleLikeProduct,
-  toggleSaveProduct
+  toggleSaveProduct,
+  getLikedProducts,
+  getSavedProducts
 };

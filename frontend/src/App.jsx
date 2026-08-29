@@ -13,6 +13,8 @@ import AdminVerificationCenter from './pages/AdminVerificationCenter';
 import RecentActivityPage from './pages/RecentActivityPage';
 import Profile from './pages/Profile';
 import AddProduct from './pages/AddProduct';
+import LikedProducts from './pages/LikedProducts';
+import SavedProducts from './pages/SavedProducts';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
@@ -39,6 +41,8 @@ function AppContent() {
           <Route path="/add-product" element={<AddProduct />} />
           <Route path="/edit-product/:id" element={<AddProduct />} />
           <Route path="/admin/verifications" element={<AdminVerificationCenter />} />
+          <Route path="/liked" element={<LikedProducts />} />
+          <Route path="/saved" element={<SavedProducts />} />
         </Routes>
       </main>
       

@@ -21,6 +21,15 @@ const AdminDashboard = () => {
   const [actionReason, setActionReason] = useState('');
   const [previewImage, setPreviewImage] = useState(null);
 
+  // Search & Pagination
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchTerm]);
+
   useEffect(() => {
     if (!user || user.role !== 'admin') {
       navigate('/');
@@ -121,26 +130,88 @@ const AdminDashboard = () => {
     { id: 'products', label: 'All Products' },
   ];
 
+  const getFilteredData = () => {
+    let data = [];
+    if (activeTab === 'pending-kyc') data = pendingUsers;
+    else if (activeTab === 'pending-products') data = pendingProducts;
+    else if (activeTab === 'users') data = allUsers;
+    else if (activeTab === 'products') data = allProducts;
+
+    if (!searchTerm) return data;
+
+    const lowerSearch = searchTerm.toLowerCase();
+    return data.filter(item => {
+      if (activeTab === 'users' || activeTab === 'pending-kyc') {
+        return (
+          item.name?.toLowerCase().includes(lowerSearch) ||
+          item.username?.toLowerCase().includes(lowerSearch) ||
+          item.equiporaId?.toLowerCase().includes(lowerSearch) ||
+          item.email?.toLowerCase().includes(lowerSearch)
+        );
+      } else {
+        return (
+          item.name?.toLowerCase().includes(lowerSearch) ||
+          item.brand?.toLowerCase().includes(lowerSearch) ||
+          item.model?.toLowerCase().includes(lowerSearch) ||
+          item.providerId?.username?.toLowerCase().includes(lowerSearch) ||
+          item.providerId?.name?.toLowerCase().includes(lowerSearch)
+        );
+      }
+    });
+  };
+
+  const filteredData = getFilteredData();
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 4) {
+        pages.push(1, 2, 3, 4, 5, '...', totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+    return pages;
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8 text-gray-900 font-sans animate-fade-in">
+    <div className="min-h-screen bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] from-slate-100 via-gray-50 to-blue-50/40 py-10 px-4 sm:px-6 lg:px-8 font-sans animate-fade-in">
       <div className="max-w-[90rem] mx-auto">
-        <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Admin Dashboard</h2>
-            <p className="text-gray-500 mt-1">Central command for user identities and platform inventory.</p>
+            <h2 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 tracking-tight drop-shadow-sm">Admin Dashboard</h2>
+            <p className="text-gray-500 font-medium mt-1">Central command for user identities and platform inventory.</p>
+          </div>
+          <div className="w-full md:w-96 relative">
+            <input 
+              type="text" 
+              placeholder="Search by name, ID, or provider username..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all"
+            />
+            <svg className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </div>
         </div>
 
         {/* Custom Tabs */}
-        <div className="flex space-x-1 bg-gray-200/50 p-1 rounded-xl mb-6 overflow-x-auto w-fit max-w-full">
+        <div className="flex space-x-2 bg-white/60 backdrop-blur-md p-1.5 rounded-2xl mb-8 overflow-x-auto w-fit max-w-full shadow-sm border border-white/50">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${
                 activeTab === tab.id 
-                  ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-900/5' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/50'
+                  ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20 transform scale-[1.02]' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-white/80'
               }`}
             >
               {tab.label}
@@ -153,9 +224,9 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl shadow-blue-900/5 border border-white overflow-hidden flex flex-col h-[800px] relative z-10">
           {loading ? (
-            <div className="p-24 flex flex-col items-center justify-center space-y-5 bg-gray-50/50">
+            <div className="flex-grow flex flex-col items-center justify-center space-y-5 bg-gray-50/50">
               <div className="relative w-16 h-16">
                 {/* Background Ring */}
                 <div className="absolute inset-0 rounded-full border-[3px] border-gray-200"></div>
@@ -167,122 +238,131 @@ const AdminDashboard = () => {
               <p className="text-gray-900 font-black tracking-widest text-xs uppercase animate-pulse">Loading Data...</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+              <div className="overflow-y-auto overflow-x-auto flex-grow relative">
               
               {/* TAB 1: PENDING USERS (KYC) */}
               {activeTab === 'pending-kyc' && (
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50/50">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Equipora ID</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User Details</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Document</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {pendingUsers.map(u => (
-                      <tr key={u._id} className="hover:bg-blue-50/30 transition-colors">
-                        <td className="px-6 py-5 whitespace-nowrap">
-                          <span className="font-mono font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">{u.equiporaId}</span>
-                        </td>
-                        <td className="px-6 py-5">
-                          <div className="text-sm font-semibold text-gray-900">{u.name}</div>
-                          <div className="text-sm text-gray-500 mt-0.5">@{u.username}</div>
-                          <div className="text-xs text-green-700 font-medium mt-1.5 flex gap-2">
-                            {u.emailVerified && <span className="flex items-center gap-1">Email</span>} 
-                            {u.mobileVerified && <span className="flex items-center gap-1">Mobile</span>}
+                <div className="p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {currentItems.map(u => (
+                      <div key={u._id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col md:flex-row gap-6 items-center">
+                        <div className="w-24 h-24 rounded-full bg-blue-50 border-4 border-white shadow-md flex items-center justify-center text-3xl font-black text-blue-600 flex-shrink-0">
+                          {u.name.charAt(0)}
+                        </div>
+                        <div className="flex-grow w-full">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h4 className="text-lg font-bold text-gray-900">{u.name}</h4>
+                              <p className="text-sm text-gray-500">@{u.username}</p>
+                            </div>
+                            <span className="font-mono text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-100">
+                              {u.equiporaId}
+                            </span>
                           </div>
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-600 font-medium">
-                          {u.kycData?.primaryDocumentType || 'N/A'}
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap">
-                          <span className="px-3 py-1 inline-flex text-xs font-semibold rounded-full border bg-yellow-50 text-yellow-700 border-yellow-200">
-                            {u.kycStatus.replace('_', ' ')}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
-                          <button onClick={() => { setSelectedUser(u); setActionReason(''); }} className="text-blue-700 bg-white border border-gray-300 hover:bg-gray-50 font-semibold px-4 py-2 rounded-lg shadow-sm transition-colors">
-                            Review Identity
-                          </button>
-                        </td>
-                      </tr>
+                          
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            <span className="px-2.5 py-1 inline-flex text-[10px] font-bold rounded-full border bg-yellow-50 text-yellow-700 border-yellow-200 uppercase tracking-wider">
+                              {u.kycStatus.replace('_', ' ')}
+                            </span>
+                            <span className="px-2.5 py-1 inline-flex text-[10px] font-bold rounded-full border bg-gray-50 text-gray-600 border-gray-200">
+                              DOC: {u.kycData?.primaryDocumentType || 'N/A'}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-3 w-full">
+                            <button 
+                              onClick={() => { setSelectedUser(u); setActionReason(''); }} 
+                              className="flex-1 py-2.5 bg-gray-50 hover:bg-blue-600 text-gray-700 hover:text-white text-sm font-bold rounded-xl transition-colors border border-gray-100 shadow-sm"
+                            >
+                              Review Identity
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                    {pendingUsers.length === 0 && (
-                      <tr><td colSpan="5" className="px-6 py-16 text-center text-gray-500 font-medium">Queue is empty.</td></tr>
-                    )}
-                  </tbody>
-                </table>
+                  </div>
+                  {currentItems.length === 0 && (
+                    <div className="py-20 flex flex-col items-center justify-center text-center">
+                      <svg className="w-16 h-16 text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                      <h3 className="text-lg font-bold text-gray-900">No Pending KYC</h3>
+                      <p className="text-sm text-gray-500 mt-1">There are no identity verifications waiting in the queue.</p>
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* TAB 2: PENDING PRODUCTS */}
               {activeTab === 'pending-products' && (
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50/50">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product Info</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Provider</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Pricing</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {pendingProducts.map(p => (
-                      <tr key={p._id} className="hover:bg-blue-50/30 transition-colors">
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
-                              <img src={p.images?.[0] ? (p.images[0].startsWith('http') ? p.images[0] : `http://localhost:5000${p.images[0].startsWith('/') ? '' : '/'}${p.images[0]}`) : 'https://via.placeholder.com/150'} alt="" className="h-full w-full object-cover" />
-                            </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {currentItems.map(p => (
+                      <div key={p._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 overflow-hidden flex flex-col group">
+                        <div className="h-48 relative overflow-hidden bg-gray-100">
+                          <img 
+                            src={p.images?.[0] ? (p.images[0].startsWith('http') ? p.images[0] : `http://localhost:5000${p.images[0].startsWith('/') ? '' : '/'}${p.images[0]}`) : 'https://via.placeholder.com/400'} 
+                            alt="" 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-80"></div>
+                          <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
                             <div>
-                              <div className="text-sm font-semibold text-gray-900">{p.name}</div>
-                              <div className="text-xs text-gray-500 mt-1">{p.brand} {p.model}</div>
+                              <h4 className="text-white font-bold text-lg line-clamp-1 drop-shadow-md">{p.name}</h4>
+                              <p className="text-white/80 text-xs font-medium">{p.brand} {p.model}</p>
+                            </div>
+                            <span className="px-3 py-1 bg-orange-500/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm">
+                              Pending Review
+                            </span>
+                          </div>
+                        </div>
+                        <div className="p-5 flex-grow flex flex-col justify-between gap-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Provider</p>
+                              <p className="text-sm font-bold text-gray-900">{p.providerId?.name || 'Unknown'}</p>
+                              <p className="text-xs text-blue-600 font-medium">@{p.providerId?.username || 'unknown'}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1">Pricing</p>
+                              <p className="text-lg font-black text-gray-900">₹{p.pricePerDay}<span className="text-xs text-gray-500 font-normal">/day</span></p>
+                              <p className="text-xs text-gray-500 font-medium">Dep: ₹{p.securityDeposit}</p>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap text-sm text-gray-600">
-                          {p.providerId?.name || 'Unknown'}
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 font-semibold">₹{p.pricePerDay}/day</div>
-                          <div className="text-xs text-gray-500">Dep: ₹{p.securityDeposit}</div>
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap">
-                          <span className="px-3 py-1 inline-flex text-xs font-semibold rounded-full border bg-orange-50 text-orange-700 border-orange-200">
-                            Pending Review
-                          </span>
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium">
-                          <button onClick={() => { setSelectedProduct(p); setActionReason(''); }} className="text-blue-700 bg-white border border-gray-300 hover:bg-gray-50 font-semibold px-4 py-2 rounded-lg shadow-sm transition-colors">
+                          
+                          <button 
+                            onClick={() => { setSelectedProduct(p); setActionReason(''); }} 
+                            className="w-full py-3 bg-gray-50 hover:bg-blue-600 text-gray-700 hover:text-white font-bold rounded-xl transition-colors border border-gray-100 shadow-sm"
+                          >
                             Review Product
                           </button>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     ))}
-                    {pendingProducts.length === 0 && (
-                      <tr><td colSpan="5" className="px-6 py-16 text-center text-gray-500 font-medium">No products pending approval.</td></tr>
-                    )}
-                  </tbody>
-                </table>
+                  </div>
+                  {currentItems.length === 0 && (
+                    <div className="py-20 flex flex-col items-center justify-center text-center">
+                      <svg className="w-16 h-16 text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                      <h3 className="text-lg font-bold text-gray-900">No Products Pending</h3>
+                      <p className="text-sm text-gray-500 mt-1">There are no products waiting for approval right now.</p>
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* TAB 3: ALL USERS */}
               {activeTab === 'users' && (
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50/50">
+                  <thead className="bg-gray-50/80 backdrop-blur-sm border-b border-gray-200">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">KYC Status</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Joined</th>
-                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">User</th>
+                      <th className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Role</th>
+                      <th className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">KYC Status</th>
+                      <th className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Joined</th>
+                      <th className="px-6 py-5 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {allUsers.map(u => (
+                    {currentItems.map(u => (
                       <tr key={u._id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="text-sm font-semibold text-gray-900">{u.name}</div>
@@ -304,6 +384,9 @@ const AdminDashboard = () => {
                         </td>
                       </tr>
                     ))}
+                    {currentItems.length === 0 && (
+                      <tr><td colSpan="5" className="px-6 py-16 text-center text-gray-500 font-medium">No results found.</td></tr>
+                    )}
                   </tbody>
                 </table>
               )}
@@ -311,17 +394,17 @@ const AdminDashboard = () => {
               {/* TAB 4: ALL PRODUCTS */}
               {activeTab === 'products' && (
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50/50">
+                  <thead className="bg-gray-50/80 backdrop-blur-sm border-b border-gray-200">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price/Day</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Product</th>
+                      <th className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Category</th>
+                      <th className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Price/Day</th>
+                      <th className="px-6 py-5 text-left text-xs font-bold text-gray-500 uppercase tracking-widest">Status</th>
+                      <th className="px-6 py-5 text-right text-xs font-bold text-gray-500 uppercase tracking-widest">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {allProducts.map(p => (
+                    {currentItems.map(p => (
                       <tr key={p._id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="text-sm font-semibold text-gray-900">{p.name}</div>
@@ -339,11 +422,56 @@ const AdminDashboard = () => {
                         </td>
                       </tr>
                     ))}
+                    {currentItems.length === 0 && (
+                      <tr><td colSpan="5" className="px-6 py-16 text-center text-gray-500 font-medium">No results found.</td></tr>
+                    )}
                   </tbody>
                 </table>
               )}
 
             </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="px-8 py-5 bg-white/90 backdrop-blur-md border-t border-gray-100 flex items-center justify-between mt-auto flex-shrink-0 z-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
+                <span className="text-sm text-gray-500 font-medium">
+                  Showing <span className="font-black text-gray-900">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-black text-gray-900">{Math.min(currentPage * itemsPerPage, filteredData.length)}</span> of <span className="font-black text-gray-900">{filteredData.length}</span> results
+                </span>
+                <div className="flex space-x-2">
+                  <button 
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+                  >
+                    Prev
+                  </button>
+                  {getPageNumbers().map((num, i) => (
+                    <button
+                      key={i}
+                      disabled={num === '...'}
+                      onClick={() => num !== '...' && setCurrentPage(num)}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm ${
+                        currentPage === num 
+                          ? 'bg-blue-600 text-white shadow-blue-600/30 ring-2 ring-blue-600/20' 
+                          : num === '...' 
+                            ? 'text-gray-400 cursor-default shadow-none border border-transparent' 
+                            : 'border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900'
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                  <button 
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
           )}
         </div>
       </div>

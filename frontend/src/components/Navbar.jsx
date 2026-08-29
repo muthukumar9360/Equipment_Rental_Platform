@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import api from '../services/api';
 
 const Navbar = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout, setUser } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
@@ -12,6 +13,10 @@ const Navbar = () => {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [recentItems, setRecentItems] = useState([]);
   const historyRef = useRef(null);
+
+  // Notifications Modal State
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const notificationsRef = useRef(null);
 
   // Profile Dropdown State
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -46,12 +51,27 @@ const Navbar = () => {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
         setIsProfileDropdownOpen(false);
       }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setIsNotificationsOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const isActive = (path) => location.pathname === path;
+
+  const handleDismissNotification = async (reqId) => {
+    try {
+      await api.post(`/users/reject-follow/${reqId}`);
+      setUser(prev => ({ 
+        ...prev, 
+        followRequests: prev.followRequests?.filter(r => r._id !== reqId) 
+      }));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <header 
@@ -105,11 +125,90 @@ const Navbar = () => {
           {/* Right Section: History + Auth */}
           <div className="flex items-center space-x-3 sm:space-x-4">
             
+            {/* Saved & Liked Buttons */}
+            {user && (
+              <>
+                <Link 
+                  to="/saved"
+                  className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${isActive('/saved') ? 'bg-yellow-500 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-yellow-50 hover:text-yellow-600'}`}
+                  title="Saved Products"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                </Link>
+                <Link 
+                  to="/liked"
+                  className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${isActive('/liked') ? 'bg-red-500 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500'}`}
+                  title="Liked Products"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                </Link>
+              </>
+            )}
+
+            {/* Notifications Toggle Button */}
+            {user && (
+              <div className="relative" ref={notificationsRef}>
+                <button 
+                  onClick={() => { setIsNotificationsOpen(!isNotificationsOpen); setIsHistoryOpen(false); }}
+                  className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+                    isNotificationsOpen
+                      ? 'bg-blue-600 text-white shadow-md' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+                  }`}
+                  title="Notifications"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  
+                  {/* Notification Dot */}
+                  {user.followRequests?.length > 0 && !isNotificationsOpen && (
+                    <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full animate-pulse"></span>
+                  )}
+                </button>
+
+                {/* Notifications Mini-Modal */}
+                {isNotificationsOpen && (
+                  <div className="absolute top-[120%] right-0 w-[350px] bg-white/95 backdrop-blur-2xl border border-gray-100 rounded-3xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] overflow-hidden z-[110] transform origin-top-right transition-all animate-slide-up">
+                    <div className="flex justify-between items-center p-4 border-b border-gray-100/60 bg-gray-50/50">
+                      <h3 className="font-black text-black-900 text-lg flex items-center">
+                        Notifications
+                      </h3>
+                      <button onClick={() => setIsNotificationsOpen(false)} className="p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
+                    
+                    <div className="max-h-[350px] overflow-y-auto p-2 space-y-1">
+                      {user.followRequests?.length > 0 ? (
+                        user.followRequests.map(req => (
+                          <div key={req._id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                            <Link to={`/profile/${req._id}`} onClick={() => setIsNotificationsOpen(false)} className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-200 block">
+                              {req.profileImage ? <img src={req.profileImage} alt="" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-sm">{req.name?.charAt(0)}</div>}
+                            </Link>
+                            <div className="grow overflow-hidden leading-tight">
+                              <Link to={`/profile/${req._id}`} onClick={() => setIsNotificationsOpen(false)} className="font-bold text-gray-900 text-sm truncate hover:underline block">{req.username}</Link>
+                              <p className="text-gray-500 text-xs truncate">started following you</p>
+                            </div>
+                            <button onClick={() => handleDismissNotification(req._id)} className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors shrink-0">Dismiss</button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 px-4">
+                          <p className="text-gray-500 font-medium">No new notifications.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* History Toggle Button */}
             {user && (
               <div className="relative" ref={historyRef}>
                 <button 
-                onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+                onClick={() => { setIsHistoryOpen(!isHistoryOpen); setIsNotificationsOpen(false); }}
                 className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
                   (isActive('/history') || isHistoryOpen)
                     ? 'bg-gray-900 text-white shadow-md' 
@@ -245,15 +344,17 @@ const Navbar = () => {
                         <p className="text-xs text-gray-500 truncate">{user.email}</p>
                       </div>
 
-                      {/* Primary Action (Add Product) */}
-                      <Link 
-                        to="/add-product" 
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                        className="flex items-center w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold text-sm hover:shadow-[0_8px_20px_-6px_rgba(37,99,235,0.5)] hover:-translate-y-0.5 transition-all duration-300 mb-1 group"
-                      >
-                        <svg className="w-4 h-4 mr-2.5 transform group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
-                        Add New Product
-                      </Link>
+                      {/* Primary Action (Add Product) - Hidden for Admins */}
+                      {user.role !== 'admin' && (
+                        <Link 
+                          to="/add-product" 
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="flex items-center w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold text-sm hover:shadow-[0_8px_20px_-6px_rgba(37,99,235,0.5)] hover:-translate-y-0.5 transition-all duration-300 mb-1 group"
+                        >
+                          <svg className="w-4 h-4 mr-2.5 transform group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                          Add New Product
+                        </Link>
+                      )}
 
                       {/* Other Links */}
                       <Link 
