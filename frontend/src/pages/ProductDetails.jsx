@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import Loader from '../components/Loader';
 
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
@@ -96,7 +97,7 @@ const ProductDetails = () => {
       }
     };
     fetchProduct();
-  }, [id]);
+  }, [id, user]);
 
   useEffect(() => {
     if (user && product) {
@@ -149,12 +150,13 @@ const ProductDetails = () => {
       } catch (err) {
         console.error("Error fetching alternatives", err);
       }
+      setLoading(false);
     };
     fetchAlternatives();
   }, [product?._id, isOwner]);
 
-  if (loading) return <div className="min-h-screen bg-white flex items-center justify-center text-gray-500">Loading immersive experience...</div>;
-  if (!product) return <div className="min-h-screen bg-white flex items-center justify-center text-gray-500">Product not found.</div>;
+  if (loading) return <Loader type="fullpage" text="Loading immersive experience..." />;
+  if (!product) return <div className="text-center mt-20 text-red-500 font-bold">Product not found</div>;
 
   const resolveUrl = (url) => url ? (url.startsWith('http') ? url : `http://localhost:5000${url.startsWith('/') ? '' : '/'}${url}`) : null;
 
@@ -172,6 +174,28 @@ const ProductDetails = () => {
 
   // Basic TN coordinate
   const mapCenter = [11.1271, 78.6569];
+
+  const handleRentRequest = async () => {
+    if (!user) {
+      alert("Please login to rent this product.");
+      navigate('/login');
+      return;
+    }
+    
+    if (!dates || dates.length !== 2) return;
+
+    try {
+      await api.post('/bookings', {
+        productId: product._id,
+        startDate: dates[0],
+        endDate: dates[1]
+      });
+      alert('Rental request sent to provider! Awaiting approval.');
+      navigate('/dashboard');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to submit rental request');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans pb-10 relative">
@@ -404,6 +428,16 @@ const ProductDetails = () => {
               >
                 View Profile
               </button>
+
+              {user && user._id !== product.providerId?._id && (
+                <button 
+                  onClick={() => navigate('/messages', { state: { receiverId: product.providerId?._id, productId: product._id } })}
+                  className="px-4 py-2 bg-blue-600 border border-blue-700 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-sm text-sm flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                  Message
+                </button>
+              )}
               
               <button 
                 onClick={handleLike}
@@ -611,6 +645,7 @@ const ProductDetails = () => {
               </div>
             ) : (
               <button 
+                onClick={handleRentRequest}
                 disabled={!dates || dates.length !== 2 || !startTime || !endTime}
                 className="w-full py-4 rounded-2xl bg-blue-600 text-white font-bold text-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md transition-all transform hover:-translate-y-1 cursor-pointer"
               >

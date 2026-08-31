@@ -18,6 +18,32 @@ const io = new Server(server, {
   }
 });
 
+const onlineUsers = new Map(); // userId -> socketId
+
+io.on('connection', (socket) => {
+  console.log(`User connected: ${socket.id}`);
+
+  socket.on('join', (userId) => {
+    onlineUsers.set(userId, socket.id);
+    socket.join(userId); // Join a room with their userId
+  });
+
+  socket.on('send_message', (data) => {
+    // data = { receiverId, message, conversationId, senderId }
+    io.to(data.receiverId).emit('receive_message', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`User disconnected: ${socket.id}`);
+    for (let [userId, socketId] of onlineUsers.entries()) {
+      if (socketId === socket.id) {
+        onlineUsers.delete(userId);
+        break;
+      }
+    }
+  });
+});
+
 // Middleware
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -38,6 +64,8 @@ const bookingRoutes = require('./src/routes/bookingRoutes');
 const inspectionRoutes = require('./src/routes/inspectionRoutes');
 const eventRoutes = require('./src/routes/eventRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
+const notificationRoutes = require('./src/routes/notificationRoutes');
+const messageRoutes = require('./src/routes/messageRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
@@ -45,6 +73,8 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/inspections', inspectionRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Static uploads
 const path = require('path');

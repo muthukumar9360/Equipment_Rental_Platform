@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import ProductQuickViewModal from '../components/ProductQuickViewModal';
+import Loader from '../components/Loader';
 
 const ProviderPreview = () => {
   const { id } = useParams();
@@ -48,7 +49,7 @@ const ProviderPreview = () => {
     fetchProductAndAlternatives();
   }, [id]);
 
-  if (loading) return <div className="min-h-screen bg-white flex items-center justify-center text-gray-500 font-medium">Loading Product Hub...</div>;
+  if (loading) return <Loader type="fullpage" text="Loading Product Hub..." />;
   if (!baseProduct) return <div className="min-h-screen bg-white flex items-center justify-center text-gray-500 font-medium">Product not found.</div>;
 
   const totalPages = Math.ceil(allProviders.length / itemsPerPage);

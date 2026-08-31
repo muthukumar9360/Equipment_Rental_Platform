@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
+import Loader from '../components/Loader';
 
 const Register = () => {
   const { setUser } = useContext(AuthContext);
@@ -566,7 +567,7 @@ const Register = () => {
                 <div className="flex space-x-4">
                   <button type="button" onClick={() => setStep(4)} disabled={isLoading} className="px-6 py-4 bg-white border border-gray-200 text-gray-700 font-bold rounded-2xl hover:bg-gray-50 disabled:opacity-50 transition-colors">Back</button>
                   <button type="submit" disabled={isLoading} className="flex-1 flex justify-center py-4 px-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 shadow-md transform hover:-translate-y-0.5 transition-all disabled:opacity-50">
-                    {isLoading ? 'Submitting...' : 'Submit Securely'}
+                    {isLoading ? <Loader type="inline" text="Submitting..." /> : 'Submit Securely'}
                   </button>
                 </div>
               </form>

@@ -16,6 +16,7 @@ const Navbar = () => {
 
   // Notifications Modal State
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const notificationsRef = useRef(null);
 
   // Profile Dropdown State
@@ -42,6 +43,24 @@ const Navbar = () => {
     }
   }, [isHistoryOpen]);
 
+  // Fetch notifications
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (user) {
+        try {
+          const { data } = await api.get('/notifications');
+          setNotifications(data);
+        } catch (error) {
+          console.error('Error fetching notifications:', error);
+        }
+      }
+    };
+    fetchNotifications();
+    // In a real app, you might want to poll this or use websockets
+    const interval = setInterval(fetchNotifications, 30000); 
+    return () => clearInterval(interval);
+  }, [user]);
+
   // Click outside to close history modal and profile dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -61,13 +80,10 @@ const Navbar = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  const handleDismissNotification = async (reqId) => {
+  const handleDismissNotification = async (notifId) => {
     try {
-      await api.post(`/users/reject-follow/${reqId}`);
-      setUser(prev => ({ 
-        ...prev, 
-        followRequests: prev.followRequests?.filter(r => r._id !== reqId) 
-      }));
+      await api.delete(`/notifications/${notifId}`);
+      setNotifications(prev => prev.filter(n => n._id !== notifId));
     } catch (err) {
       console.error(err);
     }
@@ -162,7 +178,7 @@ const Navbar = () => {
                   </svg>
                   
                   {/* Notification Dot */}
-                  {user.followRequests?.length > 0 && !isNotificationsOpen && (
+                  {notifications.length > 0 && !isNotificationsOpen && (
                     <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full animate-pulse"></span>
                   )}
                 </button>
@@ -180,17 +196,51 @@ const Navbar = () => {
                     </div>
                     
                     <div className="max-h-[350px] overflow-y-auto p-2 space-y-1">
-                      {user.followRequests?.length > 0 ? (
-                        user.followRequests.map(req => (
-                          <div key={req._id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors">
-                            <Link to={`/profile/${req._id}`} onClick={() => setIsNotificationsOpen(false)} className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-200 block">
-                              {req.profileImage ? <img src={req.profileImage} alt="" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-sm">{req.name?.charAt(0)}</div>}
-                            </Link>
-                            <div className="grow overflow-hidden leading-tight">
-                              <Link to={`/profile/${req._id}`} onClick={() => setIsNotificationsOpen(false)} className="font-bold text-gray-900 text-sm truncate hover:underline block">{req.username}</Link>
-                              <p className="text-gray-500 text-xs truncate">started following you</p>
-                            </div>
-                            <button onClick={() => handleDismissNotification(req._id)} className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors shrink-0">Dismiss</button>
+                      {notifications.length > 0 ? (
+                        notifications.map(notif => (
+                          <div key={notif._id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                            
+                            {notif.type === 'FOLLOW' && notif.sender && (
+                              <>
+                                <Link to={`/profile/${notif.sender._id}`} onClick={() => setIsNotificationsOpen(false)} className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-200 block">
+                                  {notif.sender.profileImage ? <img src={notif.sender.profileImage} alt="" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-sm">{notif.sender.name?.charAt(0)}</div>}
+                                </Link>
+                                <div className="grow overflow-hidden leading-tight">
+                                  <Link to={`/profile/${notif.sender._id}`} onClick={() => setIsNotificationsOpen(false)} className="font-bold text-gray-900 text-sm truncate hover:underline block">{notif.sender.username}</Link>
+                                  <p className="text-gray-500 text-xs truncate">started following you</p>
+                                </div>
+                              </>
+                            )}
+
+                            {(notif.type === 'PRODUCT_VERIFIED' || notif.type === 'PRODUCT_REJECTED') && notif.product && (
+                              <>
+                                <Link to={`/products/${notif.product._id}`} onClick={() => setIsNotificationsOpen(false)} className="w-10 h-10 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-200 block flex items-center justify-center">
+                                  {notif.type === 'PRODUCT_VERIFIED' ? (
+                                    <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>
+                                  ) : (
+                                    <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                                  )}
+                                </Link>
+                                <div className="grow overflow-hidden leading-tight">
+                                  <p className="font-bold text-gray-900 text-sm truncate">{notif.product.name}</p>
+                                  <p className="text-gray-500 text-xs truncate">{notif.type === 'PRODUCT_VERIFIED' ? 'Product was approved' : 'Product was rejected'}</p>
+                                </div>
+                              </>
+                            )}
+                            
+                            {notif.type === 'NEW_MESSAGE' && notif.sender && (
+                              <>
+                                <Link to={`/messages`} state={{ receiverId: notif.sender._id }} onClick={() => setIsNotificationsOpen(false)} className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 border border-blue-200 block hover:bg-blue-200 transition-colors">
+                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                </Link>
+                                <div className="grow overflow-hidden leading-tight">
+                                  <Link to={`/messages`} state={{ receiverId: notif.sender._id }} onClick={() => setIsNotificationsOpen(false)} className="font-bold text-gray-900 text-sm truncate hover:underline block">{notif.sender.username}</Link>
+                                  <p className="text-gray-500 text-xs truncate">sent you a message</p>
+                                </div>
+                              </>
+                            )}
+
+                            <button onClick={() => handleDismissNotification(notif._id)} className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition-colors shrink-0">Dismiss</button>
                           </div>
                         ))
                       ) : (
@@ -202,6 +252,23 @@ const Navbar = () => {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Messages Button */}
+            {user && (
+              <Link 
+                to="/messages"
+                className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+                  isActive('/messages')
+                    ? 'bg-gray-900 text-white shadow-md' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+                }`}
+                title="Messages"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </Link>
             )}
 
             {/* History Toggle Button */}
@@ -327,7 +394,7 @@ const Navbar = () => {
                     onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                     className="flex items-center space-x-2 p-1.5 px-3 rounded-[1.25rem] bg-gray-100 hover:bg-gray-200 transition-all duration-300 group outline-none focus:ring-2 focus:ring-blue-500/20"
                   >
-                    <span className="text-sm font-bold text-gray-700 group-hover:text-gray-900 hidden sm:block">{user.name?.split(' ')[0] || 'Menu'}</span>
+                    <span className="text-sm font-bold text-gray-700 pl-3 group-hover:text-gray-900 hidden sm:block">{user.name?.split(' ')[0] || 'Menu'}</span>
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 group-hover:text-gray-900">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
@@ -368,7 +435,7 @@ const Navbar = () => {
 
                       {/* Logout */}
                       <button 
-                        onClick={() => { logout(); setIsProfileDropdownOpen(false); }} 
+                        onClick={async () => { await logout(); setIsProfileDropdownOpen(false); navigate('/'); }} 
                         className="flex items-center w-full px-4 py-2.5 mt-1 text-red-600 hover:bg-red-50 rounded-xl text-sm font-semibold transition-colors group"
                       >
                         <svg className="w-4 h-4 mr-2.5 text-red-400 group-hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>

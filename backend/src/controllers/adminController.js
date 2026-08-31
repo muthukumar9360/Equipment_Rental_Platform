@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Product = require('../models/Product');
+const Notification = require('../models/Notification');
 const VerificationAudit = require('../models/VerificationAudit');
 
 // @desc    Get all users pending verification
@@ -100,11 +101,29 @@ const reviewProduct = async (req, res) => {
     }
 
     product.verificationStatus = newStatus;
-    
-    // We could add notes/reasons to a product audit trail if needed
-    // For now we just save the status.
-
+    // We could save notes or reasons to a VerificationAudit collection if needed
     await product.save();
+
+    // Create Notification
+    let notificationType = null;
+    let message = '';
+    if (newStatus === 'Verified') {
+      notificationType = 'PRODUCT_VERIFIED';
+      message = `Your product ${product.name} has been verified and is now live!`;
+    } else if (newStatus === 'Rejected') {
+      notificationType = 'PRODUCT_REJECTED';
+      message = `Your product ${product.name} was rejected. Reason: ${reason}`;
+    }
+
+    if (notificationType) {
+      await Notification.create({
+        recipient: product.providerId,
+        type: notificationType,
+        product: product._id,
+        message: message
+      });
+    }
+
     res.json({ message: `Product status updated to ${newStatus}`, product });
   } catch (error) {
     res.status(500).json({ message: error.message });

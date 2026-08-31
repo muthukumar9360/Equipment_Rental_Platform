@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
+import Loader from '../components/Loader';
 
 const Login = () => {
   // Form Data
@@ -294,7 +295,7 @@ const Login = () => {
                 </div>
 
                 <button type="submit" disabled={isLoading} className="w-full flex justify-center py-4 px-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-black shadow-[0_8px_30px_rgb(0,0,0,0.12)] transform hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:hover:translate-y-0 mt-6">
-                  {isLoading ? 'Verifying...' : 'Continue Securely'}
+                  {isLoading ? <Loader type="inline" text="Verifying..." /> : 'Continue Securely'}
                 </button>
               </form>
             )}
@@ -324,7 +325,7 @@ const Login = () => {
                 <div className="flex space-x-3 pt-2">
                   <button type="button" onClick={() => setStep(1)} className="py-4 px-6 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-colors">Back</button>
                   <button type="submit" disabled={isLoading} className="flex-1 flex justify-center py-4 px-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-black shadow-md transform hover:-translate-y-0.5 transition-all disabled:opacity-70">
-                    {isLoading ? 'Authenticating...' : 'Sign In'}
+                    {isLoading ? <Loader type="inline" text="Authenticating..." /> : 'Sign In'}
                   </button>
                 </div>
               </form>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import Loader from '../components/Loader';
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
@@ -115,7 +116,7 @@ const ProductsPage = () => {
     fetchProducts();
   }, [appliedSearchTerm, selectedCategory, selectedSubCategory, selectedLocation, maxPrice, minTrustScore, minConditionScore, selectedBrand, verificationStatus]);
 
-  if (loading) return <div className="text-center py-20 text-gray-500">Loading equipment...</div>;
+  if (loading) return <Loader type="fullpage" text="Loading Equipment..." />;
 
   const categories = metadata.categories.sort();
   const locations = metadata.locations.sort();

@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import ProductQuickViewModal from '../components/ProductQuickViewModal';
+import Loader from '../components/Loader';
 
 const Profile = () => {
   const { id } = useParams();
@@ -196,15 +197,7 @@ const Profile = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen pt-24 bg-white flex flex-col items-center justify-center space-y-5">
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 rounded-full border-[3px] border-gray-200"></div>
-          <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-gray-900 border-r-gray-900 animate-spin"></div>
-          <div className="absolute inset-4 bg-gray-900 rounded-full animate-pulse"></div>
-        </div>
-      </div>
-    );
+    return <Loader type="fullpage" text="Loading Profile..." />;
   }
 
   if (error || !profileData) {
@@ -353,7 +346,10 @@ const Profile = () => {
                       </button>
                     ) : !isAdminProfile ? (
                       <>
-                        <button className="px-6 py-3 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-900 font-bold rounded-xl transition-all shadow-sm text-sm">
+                        <button 
+                          onClick={() => navigate('/messages', { state: { receiverId: profileData._id } })}
+                          className="px-6 py-3 bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-900 font-bold rounded-xl transition-all shadow-sm text-sm"
+                        >
                           Message
                         </button>
                         {isFollowing ? (

@@ -15,8 +15,10 @@ import Profile from './pages/Profile';
 import AddProduct from './pages/AddProduct';
 import LikedProducts from './pages/LikedProducts';
 import SavedProducts from './pages/SavedProducts';
+import Messages from './pages/Messages';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import Loader from './components/Loader';
 
 function AppContent() {
   const location = useLocation();
@@ -43,6 +45,7 @@ function AppContent() {
           <Route path="/admin/verifications" element={<AdminVerificationCenter />} />
           <Route path="/liked" element={<LikedProducts />} />
           <Route path="/saved" element={<SavedProducts />} />
+          <Route path="/messages" element={<Messages />} />
         </Routes>
       </main>
       
@@ -54,7 +57,7 @@ function AppContent() {
 function App() {
   const { user, logout, loading } = useContext(AuthContext);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Loader type="fullpage" text="Authenticating..." />;
 
   return (
     <Router>

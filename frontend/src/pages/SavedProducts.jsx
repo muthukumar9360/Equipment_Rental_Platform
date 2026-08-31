@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { AuthContext } from '../context/AuthContext';
+import Loader from '../components/Loader';
 
 const SavedProducts = () => {
   const [products, setProducts] = useState([]);
@@ -37,14 +39,7 @@ const SavedProducts = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen pt-32 bg-gray-50 flex items-center justify-center">
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 rounded-full border-[3px] border-gray-200"></div>
-          <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-yellow-500 border-r-yellow-500 animate-spin"></div>
-        </div>
-      </div>
-    );
+    return <Loader type="fullpage" text="Loading Saved Products..." />;
   }
 
   const totalPages = Math.ceil(products.length / itemsPerPage);

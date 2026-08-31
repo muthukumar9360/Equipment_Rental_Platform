@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import Loader from '../components/Loader';
 
 const AdminDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -182,7 +183,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] from-slate-100 via-gray-50 to-blue-50/40 py-10 px-4 sm:px-6 lg:px-8 font-sans animate-fade-in">
-      <div className="max-w-[90rem] mx-auto">
+      <div className="max-w-[100rem]">
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
             <h2 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 tracking-tight drop-shadow-sm">Admin Dashboard</h2>
@@ -226,16 +227,8 @@ const AdminDashboard = () => {
 
         <div className="bg-white/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl shadow-blue-900/5 border border-white overflow-hidden flex flex-col h-[800px] relative z-10">
           {loading ? (
-            <div className="flex-grow flex flex-col items-center justify-center space-y-5 bg-gray-50/50">
-              <div className="relative w-16 h-16">
-                {/* Background Ring */}
-                <div className="absolute inset-0 rounded-full border-[3px] border-gray-200"></div>
-                {/* Outer Spinning Ring */}
-                <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-gray-900 border-r-gray-900 animate-spin"></div>
-                {/* Inner Pulsating Dot */}
-                <div className="absolute inset-4 bg-gray-900 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.3)] animate-pulse"></div>
-              </div>
-              <p className="text-gray-900 font-black tracking-widest text-xs uppercase animate-pulse">Loading Data...</p>
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader type="section" text="Loading Data..." />
             </div>
           ) : (
             <>

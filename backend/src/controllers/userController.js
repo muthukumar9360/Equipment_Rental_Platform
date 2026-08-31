@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const Product = require('../models/Product');
+const Notification = require('../models/Notification');
 
 // @desc    Submit KYC documents
 // @route   POST /api/users/kyc
@@ -148,9 +150,19 @@ const followUser = async (req, res) => {
     targetUser.followers.push(req.user._id);
     currentUser.following.push(targetUser._id);
 
-    // Use followRequests as a notification queue for the target user
-    if (!targetUser.followRequests.includes(req.user._id)) {
-      targetUser.followRequests.push(req.user._id);
+    // Create Notification
+    const existingNotification = await Notification.findOne({
+      recipient: targetUser._id,
+      sender: req.user._id,
+      type: 'FOLLOW'
+    });
+
+    if (!existingNotification) {
+      await Notification.create({
+        recipient: targetUser._id,
+        sender: req.user._id,
+        type: 'FOLLOW'
+      });
     }
 
     await targetUser.save();
