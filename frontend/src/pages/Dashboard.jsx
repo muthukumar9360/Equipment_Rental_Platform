@@ -38,8 +38,12 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {user.role === 'renter' && <RenterDashboard user={user} bookings={bookings} loading={loading} />}
-        {user.role === 'provider' && <ProviderDashboard user={user} bookings={bookings} setBookings={setBookings} loading={loading} />}
+        {user.role !== 'admin' && (
+          <>
+            <RenterDashboard user={user} bookings={bookings} loading={loading} />
+            <ProviderDashboard user={user} bookings={bookings} setBookings={setBookings} loading={loading} />
+          </>
+        )}
         {user.role === 'admin' && <AdminDashboard />}
       </div>
     </div>
@@ -203,10 +207,6 @@ const ProviderDashboard = ({ user, bookings, setBookings, loading }) => {
 
   return (
     <>
-      <div className="col-span-1 md:col-span-3">
-        <VerificationTimeline kycStatus={user.kycStatus} />
-      </div>
-      
       {/* Top Stats Overview */}
       <div className="col-span-1 md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white/80 backdrop-blur-xl p-6 rounded-2xl shadow-sm border border-gray-100/50 flex items-center gap-4 hover:shadow-md transition-shadow">

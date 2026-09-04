@@ -178,7 +178,7 @@ const ProductDetails = () => {
   const handleRentRequest = async () => {
     if (!user) {
       alert("Please login to rent this product.");
-      navigate('/login');
+      navigate('/login', { state: { from: `/products/${product._id}` } });
       return;
     }
     

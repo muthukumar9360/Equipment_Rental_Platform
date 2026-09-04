@@ -10,6 +10,7 @@ import MobileAppBanner from '../components/MobileAppBanner';
 import ExploreSections from '../components/ExploreSections';
 import LocationsAndSearches from '../components/LocationsAndSearches';
 import CategoryShowcase from '../components/CategoryShowcase';
+import MostSearchedGear from '../components/MostSearchedGear';
 
 const Marketplace = () => {
   const navigate = useNavigate();
@@ -454,6 +455,7 @@ const Marketplace = () => {
 
       <QuickCategories products={products} />
 
+      <MostSearchedGear products={products} />
 
       <EquiporaFeatureShowcases />
 

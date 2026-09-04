@@ -211,22 +211,20 @@ const Profile = () => {
 
   let filteredProducts = userProducts;
   
-  if (isOwnProfile) {
-    filteredProducts = activeTab === 'All' 
-      ? userProducts 
-      : userProducts.filter(p => p.verificationStatus === activeTab);
-  } else {
-    // For public profile, apply category, subcategory and search filters
-    if (productSearchTerm) {
-      const lowerSearch = productSearchTerm.toLowerCase();
-      filteredProducts = filteredProducts.filter(p => p.name?.toLowerCase().includes(lowerSearch));
-    }
-    if (publicCategory) {
-      filteredProducts = filteredProducts.filter(p => p.category === publicCategory);
-    }
-    if (publicSubCategory) {
-      filteredProducts = filteredProducts.filter(p => p.subCategory === publicSubCategory);
-    }
+  if (isOwnProfile && activeTab !== 'All') {
+    filteredProducts = filteredProducts.filter(p => p.verificationStatus === activeTab);
+  }
+  
+  // Apply category, subcategory and search filters for ALL profiles
+  if (productSearchTerm) {
+    const lowerSearch = productSearchTerm.toLowerCase();
+    filteredProducts = filteredProducts.filter(p => p.name?.toLowerCase().includes(lowerSearch));
+  }
+  if (publicCategory) {
+    filteredProducts = filteredProducts.filter(p => p.category === publicCategory);
+  }
+  if (publicSubCategory) {
+    filteredProducts = filteredProducts.filter(p => p.subCategory === publicSubCategory);
   }
 
   const uniqueCategories = [...new Set(userProducts.map(p => p.category))].filter(Boolean);
@@ -438,13 +436,8 @@ const Profile = () => {
                 })}
               </div>
             )}
-
-             <h3 className="text-2xl font-black text-gray-900 flex items-center">
-              <svg className="w-6 h-6 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-              Available Products
-            </h3>
             
-            {!isOwnProfile && userProducts.length > 0 && (
+            {userProducts.length > 0 && (
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full md:w-auto mt-4 md:mt-0">
                 {/* Search Bar */}
                 <div className="relative w-full sm:w-[220px]">
@@ -480,7 +473,7 @@ const Profile = () => {
                   </button>
                   
                   {isCategoryDropdownOpen && (
-                    <div className="absolute z-50 w-full mt-2 py-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden animate-fade-in-up">
+                    <div className="absolute z-50 w-full mt-2 py-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden animate-fade-in-up custom-scrollbar">
                       <button 
                         onClick={() => { setPublicCategory(''); setPublicSubCategory(''); setCurrentPage(1); setIsCategoryDropdownOpen(false); }}
                         className={`w-full text-left px-4 py-2 text-sm font-bold hover:bg-gray-50 transition-colors ${!publicCategory ? 'text-blue-600 bg-blue-50/50' : 'text-gray-700'}`}
@@ -522,7 +515,7 @@ const Profile = () => {
                   </button>
                   
                   {isSubCategoryDropdownOpen && (
-                    <div className="absolute z-50 w-full mt-2 py-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden animate-fade-in-up">
+                    <div className="absolute z-50 w-full mt-2 py-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden animate-fade-in-up custom-scrollbar">
                       <button 
                         onClick={() => { setPublicSubCategory(''); setCurrentPage(1); setIsSubCategoryDropdownOpen(false); }}
                         className={`w-full text-left px-4 py-2 text-sm font-bold hover:bg-gray-50 transition-colors ${!publicSubCategory ? 'text-blue-600 bg-blue-50/50' : 'text-gray-700'}`}

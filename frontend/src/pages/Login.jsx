@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import Loader from '../components/Loader';
 
@@ -27,6 +27,7 @@ const Login = () => {
 
   const { setUser } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handlePreLogin = async (e) => {
     e.preventDefault();
@@ -81,7 +82,8 @@ const Login = () => {
       if (data.role === 'admin') {
         navigate('/admin/verifications');
       } else {
-        navigate('/dashboard');
+        const from = location.state?.from || '/dashboard';
+        navigate(from);
       }
     } catch (error) {
       setErrorMsg(error.response?.data?.message || 'Invalid OTP');
