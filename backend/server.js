@@ -66,6 +66,7 @@ const eventRoutes = require('./src/routes/eventRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
 const messageRoutes = require('./src/routes/messageRoutes');
+const paymentRoutes = require('./src/routes/paymentRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
@@ -75,6 +76,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Static uploads
 const path = require('path');

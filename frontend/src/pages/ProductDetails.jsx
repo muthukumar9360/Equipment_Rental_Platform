@@ -158,7 +158,7 @@ const ProductDetails = () => {
   if (loading) return <Loader type="fullpage" text="Loading immersive experience..." />;
   if (!product) return <div className="text-center mt-20 text-red-500 font-bold">Product not found</div>;
 
-  const resolveUrl = (url) => url ? (url.startsWith('http') ? url : `http://localhost:5000${url.startsWith('/') ? '' : '/'}${url}`) : null;
+  const resolveUrl = (url) => url ? (url.startsWith('http') ? url : `http://localhost:5024${url.startsWith('/') ? '' : '/'}${url}`) : null;
 
   const getDays = () => {
     if (dates && dates.length === 2 && dates[0] && dates[1]) {

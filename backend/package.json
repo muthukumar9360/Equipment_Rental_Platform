@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js",
-    "dev": "nodemon server.js",
-    "seed": "node seed.js",
+    "start": "npm run seed && node server.js",
+    "dev": "npm run seed && nodemon server.js",
+    "seed": "node seed.js && node seed-large.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -25,6 +25,8 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.2",
     "multer": "^2.2.0",
+    "nodemailer": "^10.0.9",
+    "razorpay": "^2.9.8",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {

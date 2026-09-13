@@ -1,6 +1,17 @@
 const User = require('../models/User');
 const OtpRecord = require('../models/OtpRecord');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST,
+  port: process.env.EMAIL_PORT,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 const generateToken = (res, userId) => {
   const token = jwt.sign({ id: userId }, process.env.JWT_SECRET || 'fallback_secret', {
@@ -45,7 +56,24 @@ const sendOtp = async (req, res) => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
-    console.log(`[MOCK OTP SERVICE] OTP for ${identifier} is ${otp}`);
+
+    if (identifier.includes('@')) {
+      try {
+        await transporter.sendMail({
+          from: `"Equipora" <${process.env.EMAIL_USER}>`,
+          to: identifier,
+          subject: "Your Equipora Verification Code",
+          text: `Your verification code is: ${otp}. It will expire in 10 minutes.`,
+          html: `<p>Your verification code is: <b>${otp}</b></p><p>It will expire in 10 minutes.</p>`
+        });
+        console.log(`[EMAIL OTP SERVICE] Sent OTP to ${identifier}`);
+      } catch (err) {
+        console.error('Error sending email OTP:', err);
+        return res.status(500).json({ message: 'Failed to send email. Please try again.' });
+      }
+    } else {
+      console.log(`[MOCK OTP SERVICE] OTP for ${identifier} is ${otp}`);
+    }
 
     // Store in DB (expires in 10 minutes)
     await OtpRecord.create({

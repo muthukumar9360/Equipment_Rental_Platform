@@ -293,7 +293,7 @@ const AdminDashboard = () => {
                       <div key={p._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 overflow-hidden flex flex-col group">
                         <div className="h-48 relative overflow-hidden bg-gray-100">
                           <img 
-                            src={p.images?.[0] ? (p.images[0].startsWith('http') ? p.images[0] : `http://localhost:5000${p.images[0].startsWith('/') ? '' : '/'}${p.images[0]}`) : 'https://via.placeholder.com/400'} 
+                            src={p.images?.[0] ? (p.images[0].startsWith('http') ? p.images[0] : `http://localhost:5024${p.images[0].startsWith('/') ? '' : '/'}${p.images[0]}`) : 'https://via.placeholder.com/400'} 
                             alt="" 
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                           />
@@ -514,12 +514,12 @@ const AdminDashboard = () => {
                           <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">{doc.docType}</span>
                           <div className="aspect-video bg-gray-200 rounded-xl overflow-hidden border border-gray-300 relative flex items-center justify-center">
                             <img 
-                              src={`http://localhost:5000${doc.url.startsWith('/') ? '' : '/'}${doc.url}`} 
+                              src={`http://localhost:5024${doc.url.startsWith('/') ? '' : '/'}${doc.url}`} 
                               alt={doc.docType} 
                               className="w-full h-full object-cover"
                             />
                             <div 
-                              onClick={() => setPreviewImage(`http://localhost:5000${doc.url.startsWith('/') ? '' : '/'}${doc.url}`)}
+                              onClick={() => setPreviewImage(`http://localhost:5024${doc.url.startsWith('/') ? '' : '/'}${doc.url}`)}
                               className="absolute inset-0 bg-gray-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center cursor-pointer backdrop-blur-sm"
                             >
                               <div className="bg-white text-gray-900 font-semibold text-sm px-4 py-2 rounded-lg shadow-sm">View Full Screen</div>
@@ -577,7 +577,7 @@ const AdminDashboard = () => {
                     <h4 className="text-sm font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200">Product Images</h4>
                     <div className="grid grid-cols-2 gap-4">
                       {selectedProduct.images?.map((imgUrl, idx) => {
-                        const cleanUrl = imgUrl.startsWith('http') ? imgUrl : `http://localhost:5000${imgUrl.startsWith('/') ? '' : '/'}${imgUrl}`;
+                        const cleanUrl = imgUrl.startsWith('http') ? imgUrl : `http://localhost:5024${imgUrl.startsWith('/') ? '' : '/'}${imgUrl}`;
                         return (
                           <div key={idx} className="aspect-square bg-gray-200 rounded-xl overflow-hidden border border-gray-300 relative group">
                             <img src={cleanUrl} alt="" className="w-full h-full object-cover" />

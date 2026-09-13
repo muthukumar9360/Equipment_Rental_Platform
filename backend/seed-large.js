@@ -40,39 +40,27 @@ const seedLarge = async () => {
   try {
     await connectDB();
     
-    console.log("Clearing Database...");
-    await Product.deleteMany({});
-    await User.deleteMany({});
+    console.log("Appending large dataset to Database...");
     
     const password = 'password123';
     
     // 1. Generate Admin User
     console.log("Generating Admin user...");
-    await User.create({
-      username: 'admin',
-      name: 'Super Admin',
-      email: 'admin@equipora.com',
-      phone: '9999999999',
-      password: password,
-      role: 'admin',
-      isVerified: true,
-      kycStatus: 'ACTIVE'
-    });
+    await User.findOneAndUpdate(
+      { email: 'admin@equipora.com' },
+      {
+        username: 'admin',
+        name: 'Super Admin',
+        phone: '9999999999',
+        password: password,
+        role: 'admin',
+        isVerified: true,
+        kycStatus: 'ACTIVE'
+      },
+      { upsert: true, new: true }
+    );
     
-    // 1.5 Generate Specific Customer User
-    console.log("Generating Muthukumar user...");
-    await User.create({
-      username: 'muthukumar_9360',
-      name: 'Muthukumar',
-      email: 'muthukumar@equipora.com',
-      phone: '9360000000',
-      password: 'Muthukumar12',
-      role: 'user',
-      isVerified: true,
-      kycStatus: 'ACTIVE'
-    });
-    
-    // 2. Generate 50 Random Providers
+
     console.log("Generating 50 random authors/providers...");
     const providerIds = [];
     for (let i = 0; i < 50; i++) {

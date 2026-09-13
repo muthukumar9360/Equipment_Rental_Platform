@@ -49,7 +49,7 @@ const AddProduct = () => {
             description: p.description || ''
           });
 
-          const resolveUrl = (url) => url ? (url.startsWith('http') ? url : `http://localhost:5000${url.startsWith('/') ? '' : '/'}${url}`) : null;
+          const resolveUrl = (url) => url ? (url.startsWith('http') ? url : `http://localhost:5024${url.startsWith('/') ? '' : '/'}${url}`) : null;
           
           setPreviews({
             front: resolveUrl(p.frontImage),
@@ -81,7 +81,7 @@ const AddProduct = () => {
   };
 
   const mainCategories = Object.keys(CATEGORIES).sort();
-  const subCategories = formData.category ? CATEGORIES[formData.category].sort() : [];
+  const subCategories = formData.category && CATEGORIES[formData.category] ? [...CATEGORIES[formData.category]].sort() : [];
 
   // Premium UI Classes
   const inputClasses = "w-full px-5 py-4 bg-white/60 backdrop-blur-sm border-2 border-gray-200/60 rounded-2xl focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:bg-white transition-all duration-300 outline-none font-semibold text-gray-900 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] hover:border-blue-400/50 placeholder:text-gray-400";
@@ -345,7 +345,7 @@ const AddProduct = () => {
                     <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                       <span className="text-gray-900 font-bold">₹</span>
                     </div>
-                    <input type="number" name="securityDeposit" value={formData.securityDeposit} onChange={handleChange} placeholder="5000" className={`${inputClasses} pl-10`} />
+                    <input type="number" name="securityDeposit" value={formData.securityDeposit} onChange={handleChange} placeholder="5024" className={`${inputClasses} pl-10`} />
                   </div>
                 </div>
 

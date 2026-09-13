@@ -10,7 +10,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (user) {
-      const newSocket = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000');
+      const newSocket = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5024');
       
       newSocket.on('connect', () => {
         newSocket.emit('join', user._id);

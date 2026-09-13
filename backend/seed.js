@@ -53,11 +53,11 @@ const seedData = async () => {
     });
 
     const provider3 = await User.create({
-      username: 'buildtech',
+      username: 'muthukumar_9360',
       name: 'BuildTech Rentals',
-      email: 'tools@equipora.com',
+      email: '2312090@nec.edu.in',
       phone: '9876543213',
-      password,
+      password:'Muthukumar12',
       role: 'user',
       isVerified: true,
       kycStatus: 'ACTIVE',
@@ -308,8 +308,19 @@ const seedData = async () => {
       }
     ];
 
-    await Product.insertMany(products);
-    console.log(`Seeded ${products.length} rich products successfully!`);
+    const processedProducts = products.map(p => ({
+      ...p,
+      condition: p.condition || 'Excellent',
+      frontImage: p.frontImage || p.images[0] || 'https://via.placeholder.com/800x600?text=Front',
+      backImage: p.backImage || p.images[1] || 'https://via.placeholder.com/800x600?text=Back',
+      leftImage: p.leftImage || p.images[2] || 'https://via.placeholder.com/800x600?text=Left',
+      rightImage: p.rightImage || p.images[3] || 'https://via.placeholder.com/800x600?text=Right',
+      topImage: p.topImage || p.images[4] || 'https://via.placeholder.com/800x600?text=Top',
+      bottomImage: p.bottomImage || 'https://via.placeholder.com/800x600?text=Bottom'
+    }));
+
+    await Product.insertMany(processedProducts);
+    console.log(`Seeded ${processedProducts.length} rich products successfully!`);
 
     process.exit(0);
   } catch (error) {

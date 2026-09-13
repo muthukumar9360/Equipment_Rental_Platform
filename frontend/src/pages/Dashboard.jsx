@@ -75,6 +75,54 @@ const RenterDashboard = ({ user, bookings, loading }) => {
     }
   };
 
+  const handlePayment = async (booking) => {
+    try {
+      const { data: order } = await api.post('/payment/create-order', {
+        amount: booking.totalPrice,
+        bookingId: booking._id
+      });
+      
+      const options = {
+        key: "rzp_test_RFxhjAiTxwrpAJ",
+        amount: order.amount,
+        currency: order.currency,
+        name: "Equipora",
+        description: "Payment for Equipment Rental",
+        order_id: order.id,
+        handler: async function (response) {
+          try {
+            const verifyRes = await api.post('/payment/verify', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              bookingId: booking._id
+            });
+            if (verifyRes.data.message === 'success' || verifyRes.data.msg === 'success') {
+              alert('Payment Successful! Rent Started.');
+              window.location.reload();
+            }
+          } catch (err) {
+            alert('Payment verification failed.');
+          }
+        },
+        prefill: {
+          name: user.name,
+          email: user.email || "user@equipora.com",
+          contact: user.phone || "9999999999"
+        },
+        theme: {
+          color: "#2563EB"
+        }
+      };
+      
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to initiate payment.');
+    }
+  };
+
   return (
     <>
       <div className="col-span-1 md:col-span-3">
@@ -134,7 +182,7 @@ const RenterDashboard = ({ user, bookings, loading }) => {
                 <div key={booking._id} className="flex items-center gap-4 p-4 bg-gray-50/50 rounded-2xl border border-gray-100 hover:bg-white hover:shadow-md transition-all group">
                   <div className="w-20 h-20 bg-gray-200 rounded-xl overflow-hidden shrink-0">
                     {booking.product?.images?.[0] ? (
-                      <img src={booking.product.images[0].startsWith('http') ? booking.product.images[0] : `http://localhost:5000${booking.product.images[0]}`} alt={booking.product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <img src={booking.product.images[0].startsWith('http') ? booking.product.images[0] : `http://localhost:5024${booking.product.images[0]}`} alt={booking.product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold">No Img</div>
                     )}
@@ -161,6 +209,14 @@ const RenterDashboard = ({ user, bookings, loading }) => {
                         <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         ₹{booking.totalPrice} Total
                       </p>
+                      {booking.status === 'Approved' && (
+                        <button 
+                          onClick={() => handlePayment(booking)}
+                          className="ml-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-colors animate-pulse"
+                        >
+                          Pay Now
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -265,7 +321,7 @@ const ProviderDashboard = ({ user, bookings, setBookings, loading }) => {
                 <div key={booking._id} className="flex items-center gap-4 p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
                   <div className="w-16 h-16 bg-gray-200 rounded-xl overflow-hidden shrink-0">
                     {booking.product?.images?.[0] ? (
-                      <img src={booking.product.images[0].startsWith('http') ? booking.product.images[0] : `http://localhost:5000${booking.product.images[0]}`} alt={booking.product.name} className="w-full h-full object-cover" />
+                      <img src={booking.product.images[0].startsWith('http') ? booking.product.images[0] : `http://localhost:5024${booking.product.images[0]}`} alt={booking.product.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold">No Img</div>
                     )}

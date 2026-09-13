@@ -91,13 +91,13 @@ const Navbar = () => {
 
   return (
     <header 
-      className={`absolute top-0 left-0 right-0 z-50 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] flex justify-center pt-3`}
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] flex justify-center pt-0"
     >
       {/* 
-        Ultra-Premium Floating Pill Navbar
+        Ultra-Premium Full Width Navbar
       */}
       <div 
-        className="relative w-[95%] max-w-8xl mx-auto rounded-[2.5rem] bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 transition-all duration-700"
+        className="relative w-full rounded-none shadow-[0_4px_30px_rgba(0,0,0,0.05)] border-b border-black/50 bg-white/70 backdrop-blur-3xl saturate-150 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
       >
         <div className="flex justify-between items-center px-4 sm:px-6 py-3">
           
@@ -146,14 +146,14 @@ const Navbar = () => {
               <>
                 <Link 
                   to="/saved"
-                  className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${isActive('/saved') ? 'bg-yellow-500 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-yellow-50 hover:text-yellow-600'}`}
+                  className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 border border-blue-200 ${isActive('/saved') ? 'bg-yellow-500 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-yellow-50 hover:text-yellow-600'}`}
                   title="Saved Products"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
                 </Link>
                 <Link 
                   to="/liked"
-                  className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${isActive('/liked') ? 'bg-red-500 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500'}`}
+                  className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 border border-blue-200 ${isActive('/liked') ? 'bg-red-500 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500'}`}
                   title="Liked Products"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
@@ -166,7 +166,7 @@ const Navbar = () => {
               <div className="relative" ref={notificationsRef}>
                 <button 
                   onClick={() => { setIsNotificationsOpen(!isNotificationsOpen); setIsHistoryOpen(false); }}
-                  className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+                  className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 border border-blue-200 ${
                     isNotificationsOpen
                       ? 'bg-blue-600 text-white shadow-md' 
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
@@ -258,7 +258,7 @@ const Navbar = () => {
             {user && (
               <Link 
                 to="/messages"
-                className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+                className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 border border-blue-200 ${
                   isActive('/messages')
                     ? 'bg-gray-900 text-white shadow-md' 
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
@@ -276,7 +276,7 @@ const Navbar = () => {
               <div className="relative" ref={historyRef}>
                 <button 
                 onClick={() => { setIsHistoryOpen(!isHistoryOpen); setIsNotificationsOpen(false); }}
-                className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 ${
+                className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 border border-blue-200 ${
                   (isActive('/history') || isHistoryOpen)
                     ? 'bg-gray-900 text-white shadow-md' 
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
@@ -392,7 +392,7 @@ const Navbar = () => {
                 <div className="relative" ref={profileDropdownRef}>
                   <button 
                     onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                    className="flex items-center space-x-2 p-1.5 px-3 rounded-[1.25rem] bg-gray-100 hover:bg-gray-200 transition-all duration-300 group outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="flex items-center space-x-2 p-1.5 px-3 rounded-[1.25rem] bg-gray-100 hover:bg-gray-200 transition-all duration-300 group outline-none focus:ring-2 focus:ring-blue-500/20 border border-blue-200"
                   >
                     <span className="text-sm font-bold text-gray-700 pl-3 group-hover:text-gray-900 hidden sm:block">{user.name?.split(' ')[0] || 'Menu'}</span>
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 group-hover:text-gray-900">

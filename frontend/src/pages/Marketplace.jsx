@@ -118,8 +118,17 @@ const Marketplace = () => {
 
   return (
     <div className="pb-0">
+      <div className="text-center mb-5">
+        <h2 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl mb-4">
+          Trust-First Equipment Rental
+        </h2>
+        <p className="text-lg text-blue-500 max-w-3xl mx-auto">
+          Rent high-quality gear with confidence. Verified users, guaranteed condition, and secure process.
+        </p>
+      </div>
+
       {/* Search Bar Section */}
-      <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col lg:flex-row gap-4 justify-between items-center z-40 relative border border-black">
+      <div className="bg-white p-5 rounded-xl shadow-sm flex flex-col lg:flex-row gap-4 justify-between items-center z-40 relative border border-black mb-5">
         <div className="w-full lg:flex-1 relative">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
@@ -301,15 +310,6 @@ const Marketplace = () => {
             Search
           </button>
         </div>
-      </div>
-
-      <div className="text-center mt-6 mb-6">
-        <h2 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl mb-4">
-          Trust-First Equipment Rental
-        </h2>
-        <p className="text-lg text-blue-500 max-w-3xl mx-auto">
-          Rent high-quality gear with confidence. Verified users, guaranteed condition, and secure process.
-        </p>
       </div>
 
       {/* More Filters Modal */}

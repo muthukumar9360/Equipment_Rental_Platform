@@ -41,7 +41,7 @@ const getBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({
       $or: [{ renter: req.user._id }, { provider: req.user._id }]
-    }).populate('product', 'name images');
+    }).populate('product', 'name images').populate('renter', 'name email phone');
     
     res.json(bookings);
   } catch (error) {
