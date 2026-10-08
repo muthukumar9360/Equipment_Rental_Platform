@@ -55,17 +55,24 @@ const Marketplace = () => {
     fetchProducts();
   }, []);
 
-  // Hardcoded for now to match UI
-  const categories = ["Cameras", "Drones", "Audio Gear", "Power Tools", "Lighting", "Vehicles"];
-  const brands = ["Sony", "Canon", "DJI", "DeWalt", "Makita", "Rode", "Shure"];
+  // Expanded standard Categories and Subcategories
   const subCategoriesMap = {
-    "Cameras": ["DSLR", "Mirrorless", "Cinema", "Action Cams", "360 Cameras"],
-    "Drones": ["Photography", "FPV Racing", "Enterprise", "Underwater"],
-    "Audio Gear": ["Microphones", "Mixers", "Speakers", "Recorders"],
-    "Power Tools": ["Drills", "Saws", "Generators", "Sanders", "Compressors"],
-    "Lighting": ["Continuous", "Strobes", "Modifiers", "Stands"],
-    "Vehicles": ["Vans", "Trucks", "Trailers", "ATVs"]
+    "Cameras & Lenses": ["DSLR", "Mirrorless", "Cinema", "Action Cams", "360 Cameras", "Lenses", "Tripods"],
+    "Drones & Aerial": ["Photography", "FPV Racing", "Enterprise", "Underwater", "Accessories"],
+    "Audio Equipment": ["Microphones", "Mixers", "Speakers", "Recorders", "Headphones", "PA Systems"],
+    "Power Tools": ["Drills", "Saws", "Generators", "Sanders", "Compressors", "Nail Guns"],
+    "Lighting & Studio": ["Continuous", "Strobes", "Modifiers", "Stands", "Backdrops"],
+    "Vehicles & Transport": ["Vans", "Trucks", "Trailers", "ATVs", "Utility Carts"],
+    "IT & Computers": ["Laptops", "Desktops", "Monitors", "Networking", "Servers", "Tablets"],
+    "Event Supplies": ["Tents", "Tables", "Chairs", "Decorations", "Stages", "Heaters"],
+    "Camping & Outdoors": ["Tents", "Sleeping Bags", "Backpacks", "Cooking Gear", "Navigation"],
+    "Construction & Heavy": ["Excavators", "Loaders", "Scaffolding", "Concrete Mixers", "Jackhammers"],
+    "Medical Devices": ["Monitors", "Wheelchairs", "Beds", "Ventilators", "Mobility Scooters"],
+    "Sports & Fitness": ["Treadmills", "Weights", "Bicycles", "Kayaks", "Golf Clubs", "Surfboards"]
   };
+  
+  const categories = Object.keys(subCategoriesMap);
+  const brands = ["Sony", "Canon", "DJI", "DeWalt", "Makita", "Rode", "Shure"];
   const locations = [
     "Tirunelveli - Sankarnagar", "Tirunelveli - Karungulam", "Tirunelveli - Palayamkottai", "Tirunelveli - Town",
     "Chennai - Anna Nagar", "Chennai - T Nagar", "Chennai - Velachery",

@@ -409,7 +409,7 @@ const AddProduct = () => {
                     ].map(view => (
                       <label key={view.id} className={`flex flex-col items-center justify-center w-full h-21 border-2 ${previews[view.id] ? 'border-blue-500 border-solid' : 'border-blue-300 border-dashed'} rounded-2xl cursor-pointer bg-blue-50/30 hover:bg-blue-50/80 transition-all duration-300 group overflow-hidden relative`}>
                         {previews[view.id] ? (
-                          <img src={previews[view.id]} alt={view.label} className="absolute inset-0 w-full h-full object-cover" />
+                          <img src={previews[view.id]} alt={view.label} className="absolute inset-0 w-full h-full object-cover"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                         ) : (
                           <div className="flex flex-col items-center justify-center">
                             <svg className="w-5 h-5 text-blue-600 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
@@ -448,7 +448,7 @@ const AddProduct = () => {
                     {/* Previews */}
                     {previews.additional.map((url, idx) => (
                       <div key={idx} className="flex-shrink-0 w-28 h-full rounded-2xl overflow-hidden border-2 border-white shadow-[0_4px_12px_rgba(0,0,0,0.08)] relative group">
-                        <img src={url} alt={`Additional ${idx}`} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                        <img src={url} alt={`Additional ${idx}`} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                           <button type="button" onClick={(e) => {
                             e.preventDefault();

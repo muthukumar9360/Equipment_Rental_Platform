@@ -56,6 +56,14 @@ app.use(helmet({
 app.use(express.json());
 app.use(cookieParser());
 
+// Rate limiting (Generous limit to ensure smooth UX across platform while protecting API)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1500, // 1500 requests per 15 minutes
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/api/', limiter);
+
 // Routes
 const authRoutes = require('./src/routes/authRoutes');
 const userRoutes = require('./src/routes/userRoutes');
@@ -67,6 +75,7 @@ const adminRoutes = require('./src/routes/adminRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
 const messageRoutes = require('./src/routes/messageRoutes');
 const paymentRoutes = require('./src/routes/paymentRoutes');
+const supportRoutes = require('./src/routes/supportRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
@@ -77,18 +86,11 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/support', supportRoutes);
 
 // Static uploads
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
-app.use('/api/', limiter);
 
 // Basic Route
 app.get('/', (req, res) => {

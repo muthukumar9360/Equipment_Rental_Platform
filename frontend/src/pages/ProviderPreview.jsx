@@ -95,10 +95,10 @@ const ProviderPreview = () => {
               
               <div className="w-full h-[400px] rounded-[32px] overflow-hidden shadow-sm relative bg-gray-100">
                 <img 
-                  src={baseProduct.images?.[0] || 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=1200&q=80'} 
+                  src={baseProduct.frontImage || 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=1200&q=80'} 
                   alt={baseProduct.name} 
                   className="w-full h-full object-cover"
-                />
+                 onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
               </div>
 
               <div className="text-center mt-8">
@@ -154,7 +154,7 @@ const ProviderPreview = () => {
                       
                       {/* Product Thumbnail */}
                       <div className="w-full sm:w-[140px] h-[140px] rounded-2xl overflow-hidden shrink-0 bg-gray-100 relative">
-                        <img src={providerProduct.images?.[0] || 'https://via.placeholder.com/400'} className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out" />
+                        <img src={providerProduct.frontImage || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E`} className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                       </div>
                       
                       <div className="flex-1 flex flex-col justify-between">

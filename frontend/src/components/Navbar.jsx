@@ -136,6 +136,32 @@ const Navbar = () => {
                 Browse
               </span>
             </Link>
+
+            <Link 
+              to="/payments" 
+              className={`relative px-6 py-2.5 rounded-xl text-sm font-black tracking-wide transition-all duration-300 overflow-hidden group ${
+                isActive('/payments') ? 'text-white' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {isActive('/payments') && <div className="absolute inset-0 bg-gray-900 rounded-xl shadow-md -z-10 animate-fade-in"></div>}
+              {!isActive('/payments') && <div className="absolute inset-0 bg-blue-100 scale-y-0 group-hover:scale-y-100 transform origin-bottom transition-transform duration-300 rounded-2xl -z-10 shadow-sm"></div>}
+              <span className="relative z-10 flex items-center">
+                Payments
+              </span>
+            </Link>
+
+            <Link 
+              to="/support" 
+              className={`relative px-6 py-2.5 rounded-xl text-sm font-black tracking-wide transition-all duration-300 overflow-hidden group ${
+                isActive('/support') || isActive('/customer-support') ? 'text-white' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {(isActive('/support') || isActive('/customer-support')) && <div className="absolute inset-0 bg-gray-900 rounded-xl shadow-md -z-10 animate-fade-in"></div>}
+              {!(isActive('/support') || isActive('/customer-support')) && <div className="absolute inset-0 bg-blue-100 scale-y-0 group-hover:scale-y-100 transform origin-bottom transition-transform duration-300 rounded-2xl -z-10 shadow-sm"></div>}
+              <span className="relative z-10 flex items-center">
+                Support
+              </span>
+            </Link>
           </nav>
 
           {/* Right Section: History + Auth */}
@@ -203,7 +229,7 @@ const Navbar = () => {
                             {notif.type === 'FOLLOW' && notif.sender && (
                               <>
                                 <Link to={`/profile/${notif.sender._id}`} onClick={() => setIsNotificationsOpen(false)} className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-200 block">
-                                  {notif.sender.profileImage ? <img src={notif.sender.profileImage} alt="" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-sm">{notif.sender.name?.charAt(0)}</div>}
+                                  {notif.sender.profileImage ? <img src={notif.sender.profileImage} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} /> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-sm">{notif.sender.name?.charAt(0)}</div>}
                                 </Link>
                                 <div className="grow overflow-hidden leading-tight">
                                   <Link to={`/profile/${notif.sender._id}`} onClick={() => setIsNotificationsOpen(false)} className="font-bold text-gray-900 text-sm truncate hover:underline block">{notif.sender.username}</Link>
@@ -321,7 +347,7 @@ const Navbar = () => {
                           <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-purple-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                           
                           <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200/60 z-10">
-                            <img src={item.images?.[0] || 'https://via.placeholder.com/100'} alt={item.name} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                            <img src={item.frontImage || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E`} alt={item.name} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                           </div>
                           
                           <div className="flex-grow min-w-0 z-10">
@@ -364,37 +390,42 @@ const Navbar = () => {
 
             {/* Auth Buttons */}
             {user ? (
-              <div className="hidden md:flex items-center space-x-2 bg-gray-50 border border-gray-200/60 p-1.5 rounded-[1.5rem]">
-                {user.role === 'admin' && (
+              <div className="flex items-center space-x-1.5 sm:space-x-2 bg-gray-50 border border-gray-200/60 p-1 sm:p-1.5 rounded-[1.5rem]">
+                {user.role === 'admin' ? (
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <Link 
+                      to="/admin" 
+                      className={`px-3 sm:px-4 py-2 sm:py-2.5 rounded-2xl text-xs font-black transition-all duration-300 flex items-center gap-1.5 ${
+                        isActive('/admin') || isActive('/admin/dashboard') || isActive('/admin/verifications')
+                          ? 'bg-rose-600 text-white shadow-md shadow-rose-500/20' 
+                          : 'bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800'
+                      }`}
+                      title="Admin Control Center (Verifications & Approvals)"
+                    >
+                      <span>🛡️</span> <span className="hidden sm:inline">Admin</span> Center
+                    </Link>
+                  
+                  </div>
+                ) : (
                   <Link 
-                    to="/admin/verifications" 
-                    className={`px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${
-                      isActive('/admin/verifications') 
-                        ? 'bg-blue-600 text-white shadow-md' 
-                        : 'bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800'
+                    to="/dashboard" 
+                    className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all duration-300 ${
+                      isActive('/dashboard') 
+                        ? 'bg-gray-900 text-white shadow-md' 
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
                     }`}
                   >
-                    Admin Center
+                    Dashboard
                   </Link>
                 )}
-                <Link 
-                  to="/dashboard" 
-                  className={`px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 ${
-                    isActive('/dashboard') 
-                      ? 'bg-gray-900 text-white shadow-md' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
-                  }`}
-                >
-                  Dashboard
-                </Link>
                 
                 {/* Profile Dropdown */}
                 <div className="relative" ref={profileDropdownRef}>
                   <button 
                     onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                    className="flex items-center space-x-2 p-1.5 px-3 rounded-[1.25rem] bg-gray-100 hover:bg-gray-200 transition-all duration-300 group outline-none focus:ring-2 focus:ring-blue-500/20 border border-blue-200"
+                    className="flex items-center space-x-2 p-1.5 px-2.5 sm:px-3 rounded-[1.25rem] bg-gray-100 hover:bg-gray-200 transition-all duration-300 group outline-none focus:ring-2 focus:ring-blue-500/20 border border-blue-200 cursor-pointer"
                   >
-                    <span className="text-sm font-bold text-gray-700 pl-3 group-hover:text-gray-900 hidden sm:block">{user.name?.split(' ')[0] || 'Menu'}</span>
+                    <span className="text-sm font-bold text-gray-700 pl-1 sm:pl-3 group-hover:text-gray-900 hidden sm:block">{user.name?.split(' ')[0] || 'Menu'}</span>
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 group-hover:text-gray-900">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
@@ -403,40 +434,129 @@ const Navbar = () => {
                   </button>
 
                   {isProfileDropdownOpen && (
-                    <div className="absolute right-0 top-full mt-3 w-64 bg-white/95 backdrop-blur-xl border border-gray-900 rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] p-2 animate-fade-in-up z-[200] overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-50/50 before:to-transparent before:z-[-1]">
+                    <div className="absolute right-0 top-full mt-3 w-72 bg-white/95 backdrop-blur-xl border border-gray-900/20 rounded-3xl shadow-[0_20px_50px_-15px_rgba(0,0,0,0.18)] p-2.5 animate-fade-in-up z-[200] overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-blue-50/40 before:to-transparent before:z-[-1]">
                       
                       {/* User Info Header */}
-                      <div className="px-4 py-3 mb-1 border-b border-gray-50">
-                        <p className="text-sm font-bold text-gray-900 truncate">{user.name}</p>
-                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      <div className="px-4 py-3 mb-2 border-b border-gray-100 bg-gray-50/60 rounded-2xl">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-black text-gray-900 truncate">{user.name}</p>
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${user.role === 'admin' ? 'bg-rose-100 text-rose-700' : 'bg-blue-100 text-blue-700'}`}>
+                            {user.role}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 truncate mt-0.5">{user.email}</p>
                       </div>
 
-                      {/* Primary Action (Add Product) - Hidden for Admins */}
-                      {user.role !== 'admin' && (
-                        <Link 
-                          to="/add-product" 
-                          onClick={() => setIsProfileDropdownOpen(false)}
-                          className="flex items-center w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold text-sm hover:shadow-[0_8px_20px_-6px_rgba(37,99,235,0.5)] hover:-translate-y-0.5 transition-all duration-300 mb-1 group"
-                        >
-                          <svg className="w-4 h-4 mr-2.5 transform group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
-                          Add New Product
-                        </Link>
+                      {/* Primary Actions based on Role */}
+                      {user.role === 'admin' ? (
+                        <div className="space-y-1 mb-2 border-b border-gray-100 pb-2">
+                          <Link 
+                            to="/admin" 
+                            onClick={() => setIsProfileDropdownOpen(false)}
+                            className="flex items-center w-full px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-800 rounded-xl font-bold text-xs transition-colors"
+                          >
+                            <span className="mr-2.5 text-sm">🛡️</span> Admin Verification Center
+                          </Link>
+                          <Link 
+                            to="/admin/track-products" 
+                            onClick={() => setIsProfileDropdownOpen(false)}
+                            className="flex items-center w-full px-3.5 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 rounded-xl font-bold text-xs transition-colors"
+                          >
+                            <span className="mr-2.5 text-sm">📦</span> Live Rental Fleet Tracker
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="space-y-1 mb-2 border-b border-gray-100 pb-2">
+                          <Link 
+                            to="/add-product" 
+                            onClick={() => setIsProfileDropdownOpen(false)}
+                            className="flex items-center w-full px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-xs hover:shadow-md transition-all group"
+                          >
+                            <svg className="w-4 h-4 mr-2 transform group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                            Add New Equipment
+                          </Link>
+                          <Link 
+                            to="/dashboard" 
+                            onClick={() => setIsProfileDropdownOpen(false)}
+                            className="flex items-center w-full px-3.5 py-2 text-gray-700 hover:bg-gray-100 rounded-xl text-xs font-bold transition-colors"
+                          >
+                            <span className="mr-2.5 text-sm">📊</span> My Dashboard
+                          </Link>
+                        </div>
                       )}
 
-                      {/* Other Links */}
-                      <Link 
-                        to="/profile" 
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                        className="flex items-center w-full px-4 py-2.5 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-sm font-semibold transition-colors"
-                      >
-                        <svg className="w-4 h-4 mr-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                        My Profile
-                      </Link>
+                      {/* Essential Navigation Links */}
+                      <div className="space-y-0.5">
+                        <Link 
+                          to="/messages" 
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="flex items-center w-full px-3.5 py-2 text-gray-700 hover:bg-gray-100 rounded-xl text-xs font-semibold transition-colors"
+                        >
+                          <svg className="w-4 h-4 mr-2.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                          Messages & Chat
+                        </Link>
+
+                        {user.role !== 'admin' && (
+                          <>
+                            <Link 
+                              to="/saved" 
+                              onClick={() => setIsProfileDropdownOpen(false)}
+                              className="flex items-center w-full px-3.5 py-2 text-gray-700 hover:bg-gray-100 rounded-xl text-xs font-semibold transition-colors"
+                            >
+                              <svg className="w-4 h-4 mr-2.5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                              Saved Equipment
+                            </Link>
+                            <Link 
+                              to="/liked" 
+                              onClick={() => setIsProfileDropdownOpen(false)}
+                              className="flex items-center w-full px-3.5 py-2 text-gray-700 hover:bg-gray-100 rounded-xl text-xs font-semibold transition-colors"
+                            >
+                              <svg className="w-4 h-4 mr-2.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                              Liked Equipment
+                            </Link>
+                            <Link 
+                              to="/history" 
+                              onClick={() => setIsProfileDropdownOpen(false)}
+                              className="flex items-center w-full px-3.5 py-2 text-gray-700 hover:bg-gray-100 rounded-xl text-xs font-semibold transition-colors"
+                            >
+                              <svg className="w-4 h-4 mr-2.5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                              Recent Activity Timeline
+                            </Link>
+                          </>
+                        )}
+
+                        <Link 
+                          to="/payments" 
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="flex items-center w-full px-3.5 py-2 text-gray-700 hover:bg-gray-100 rounded-xl text-xs font-semibold transition-colors"
+                        >
+                          <svg className="w-4 h-4 mr-2.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                          Payments Ledger
+                        </Link>
+
+                        <Link 
+                          to="/support" 
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="flex items-center w-full px-3.5 py-2 text-gray-700 hover:bg-gray-100 rounded-xl text-xs font-semibold transition-colors"
+                        >
+                          <svg className="w-4 h-4 mr-2.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                          Customer Support &amp; AI Bot
+                        </Link>
+
+                        <Link 
+                          to="/profile" 
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="flex items-center w-full px-3.5 py-2 text-gray-700 hover:bg-gray-100 rounded-xl text-xs font-semibold transition-colors"
+                        >
+                          <svg className="w-4 h-4 mr-2.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                          My Profile
+                        </Link>
+                      </div>
 
                       {/* Logout */}
                       <button 
                         onClick={async () => { await logout(); setIsProfileDropdownOpen(false); navigate('/'); }} 
-                        className="flex items-center w-full px-4 py-2.5 mt-1 text-red-600 hover:bg-red-50 rounded-xl text-sm font-semibold transition-colors group"
+                        className="flex items-center w-full px-3.5 py-2 mt-1 pt-2 border-t border-gray-100 text-red-600 hover:bg-red-50 rounded-xl text-xs font-bold transition-colors group cursor-pointer"
                       >
                         <svg className="w-4 h-4 mr-2.5 text-red-400 group-hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                         Logout

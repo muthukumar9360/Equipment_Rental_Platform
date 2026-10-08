@@ -78,14 +78,23 @@ const seedLarge = async () => {
       providerIds.push(user._id);
     }
     
-    // 3. Procedurally generate Categories and Subcategories
-    const generatedCategories = new Set();
-    while(generatedCategories.size < 50) {
-      const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-      const noun = nouns[Math.floor(Math.random() * nouns.length)];
-      generatedCategories.add(`${adj} ${noun}`);
-    }
-    const categoriesList = Array.from(generatedCategories);
+    // 3. Use standard Expanded Categories and Subcategories
+    const fullCategoriesMap = {
+      "Cameras & Lenses": ["DSLR", "Mirrorless", "Cinema", "Action Cams", "360 Cameras", "Lenses", "Tripods"],
+      "Drones & Aerial": ["Photography", "FPV Racing", "Enterprise", "Underwater", "Accessories"],
+      "Audio Equipment": ["Microphones", "Mixers", "Speakers", "Recorders", "Headphones", "PA Systems"],
+      "Power Tools": ["Drills", "Saws", "Generators", "Sanders", "Compressors", "Nail Guns"],
+      "Lighting & Studio": ["Continuous", "Strobes", "Modifiers", "Stands", "Backdrops"],
+      "Vehicles & Transport": ["Vans", "Trucks", "Trailers", "ATVs", "Utility Carts"],
+      "IT & Computers": ["Laptops", "Desktops", "Monitors", "Networking", "Servers", "Tablets"],
+      "Event Supplies": ["Tents", "Tables", "Chairs", "Decorations", "Stages", "Heaters"],
+      "Camping & Outdoors": ["Tents", "Sleeping Bags", "Backpacks", "Cooking Gear", "Navigation"],
+      "Construction & Heavy": ["Excavators", "Loaders", "Scaffolding", "Concrete Mixers", "Jackhammers"],
+      "Medical Devices": ["Monitors", "Wheelchairs", "Beds", "Ventilators", "Mobility Scooters"],
+      "Sports & Fitness": ["Treadmills", "Weights", "Bicycles", "Kayaks", "Golf Clubs", "Surfboards"]
+    };
+    
+    const categoriesList = Object.keys(fullCategoriesMap);
 
     let products = [];
     let index = 1;
@@ -94,17 +103,25 @@ const seedLarge = async () => {
     console.log(`Generating products for ${categoriesList.length} categories...`);
 
     for (const category of categoriesList) {
-      // Pick 30 random subcategories
-      const shuffledSubcats = [...subcatModifiers].sort(() => 0.5 - Math.random());
-      const subCategories = shuffledSubcats.slice(0, 30);
+      const subCategories = fullCategoriesMap[category];
       
       for (const subCat of subCategories) {
-        // 1 base model per subcategory * 10 providers = 10 products per subcategory
-        for (let i = 0; i < 1; i++) {
+        // 20 base models per subcategory * 9 providers = 180 products per subcategory
+        for (let i = 0; i < 20; i++) {
           const brand = brands[Math.floor(Math.random() * brands.length)];
           const baseModel = `${brand}-${index}X`;
-          const baseName = `${brand} ${subCat} ${category} Model ${index}`;
-          const baseImages = getRandomImages();
+          const baseName = `${brand} ${subCat} Model ${index}`;
+          
+          // Generate real-looking images from loremflickr based on category keywords
+          const searchKeyword = category.split(' ')[0].toLowerCase().replace('&', '');
+          const baseImages = [
+            `https://loremflickr.com/800/600/${searchKeyword}?lock=${Math.floor(Math.random() * 100000)}`,
+            `https://loremflickr.com/800/600/${searchKeyword}?lock=${Math.floor(Math.random() * 100000)}`,
+            `https://loremflickr.com/800/600/${searchKeyword}?lock=${Math.floor(Math.random() * 100000)}`,
+            `https://loremflickr.com/800/600/${searchKeyword}?lock=${Math.floor(Math.random() * 100000)}`,
+            `https://loremflickr.com/800/600/${searchKeyword}?lock=${Math.floor(Math.random() * 100000)}`,
+            `https://loremflickr.com/800/600/${searchKeyword}?lock=${Math.floor(Math.random() * 100000)}`
+          ];
           
           const shuffledProviders = [...providerIds].sort(() => 0.5 - Math.random());
           const authors = shuffledProviders.slice(0, 9);

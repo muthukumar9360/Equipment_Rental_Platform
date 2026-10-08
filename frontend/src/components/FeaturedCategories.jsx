@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 
 const categories = [
-  { id: 1, title: 'Cameras & Lenses', itemsCount: 45, image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=400' },
-  { id: 2, title: 'Drones', itemsCount: 12, image: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&q=80&w=400' },
-  { id: 3, title: 'Audio Equipment', itemsCount: 28, image: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&q=80&w=400' },
-  { id: 4, title: 'Lighting', itemsCount: 34, image: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?auto=format&fit=crop&q=80&w=400' },
-  { id: 5, title: 'Accessories', itemsCount: 81, image: 'https://images.unsplash.com/photo-1626244422285-a7741d40212a?auto=format&fit=crop&q=80&w=400' },
-  { id: 6, title: 'Studio Gear', itemsCount: 19, image: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&q=80&w=400' },
-  { id: 7, title: 'Action Cameras', itemsCount: 22, image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=400' },
-  { id: 8, title: 'Lenses Only', itemsCount: 56, image: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?auto=format&fit=crop&q=80&w=400' },
+  { id: 1, title: 'Cameras & Lenses', itemsCount: 450, image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=600' },
+  { id: 2, title: 'Drones & Aerial', itemsCount: 220, image: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&q=80&w=600' },
+  { id: 3, title: 'Audio Equipment', itemsCount: 380, image: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80&w=600' },
+  { id: 4, title: 'Lighting & Studio', itemsCount: 190, image: 'https://images.unsplash.com/photo-1585617415174-500b5fc91238?auto=format&fit=crop&q=80&w=600' },
+  { id: 5, title: 'Power Tools', itemsCount: 540, image: 'https://images.unsplash.com/photo-1581147036324-c17ac41dfa6c?auto=format&fit=crop&q=80&w=600' },
+  { id: 6, title: 'IT & Computers', itemsCount: 410, image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&q=80&w=600' },
+  { id: 7, title: 'Vehicles & Transport', itemsCount: 85, image: 'https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&q=80&w=600' },
+  { id: 8, title: 'Camping & Outdoors', itemsCount: 290, image: 'https://images.unsplash.com/photo-1504280387586-7b4478177d61?auto=format&fit=crop&q=80&w=600' },
 ];
 
 const FeaturedCategories = ({ onSelectCategory }) => {
@@ -59,7 +59,7 @@ const FeaturedCategories = ({ onSelectCategory }) => {
             className="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 h-72 cursor-pointer"
           >
             <div className="absolute inset-0 bg-gray-900">
-              <img src={category.image} alt={category.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700" />
+              <img src={category.image} alt={category.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
             </div>
             
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
@@ -98,7 +98,7 @@ const FeaturedCategories = ({ onSelectCategory }) => {
                     className="group relative rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-48 cursor-pointer"
                   >
                     <div className="absolute inset-0 bg-gray-900">
-                      <img src={category.image} alt={category.title} className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" />
+                      <img src={category.image} alt={category.title} className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                     <div className="absolute bottom-0 left-0 right-0 p-4">

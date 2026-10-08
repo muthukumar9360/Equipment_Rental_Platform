@@ -92,6 +92,13 @@ const updateProfile = async (req, res) => {
 
     user.name = req.body.name || user.name;
     user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
+    if (req.body.upiId !== undefined) user.upiId = req.body.upiId;
+    if (req.body.bankDetails) {
+      user.bankDetails = {
+        ...user.bankDetails,
+        ...req.body.bankDetails
+      };
+    }
     
     // Check if there is an uploaded file
     if (req.file) {
@@ -104,7 +111,9 @@ const updateProfile = async (req, res) => {
       name: updatedUser.name,
       username: updatedUser.username,
       bio: updatedUser.bio,
-      profileImage: updatedUser.profileImage
+      profileImage: updatedUser.profileImage,
+      upiId: updatedUser.upiId,
+      bankDetails: updatedUser.bankDetails
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

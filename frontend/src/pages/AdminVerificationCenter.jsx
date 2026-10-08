@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import Loader from '../components/Loader';
 
+const BACKEND_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5024/api').replace('/api', '');
+const resolveImg = (img) => !img ? '' : (img.startsWith('http') ? img : `${BACKEND_BASE}${img.startsWith('/') ? '' : '/'}${img}`);
+
 const AdminDashboard = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -182,17 +185,17 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] from-slate-100 via-gray-50 to-blue-50/40 py-10 px-4 sm:px-6 lg:px-8 font-sans animate-fade-in">
+    <div className="min-h-screen bg-[conic-gradient(at_top_right,_var(--tw-gradient-stops))] from-slate-100 via-gray-50 to-blue-50/40 py-1 pb-7 px-4 sm:px-6 lg:px-4 font-sans animate-fade-in">
       <div className="max-w-[100rem]">
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
-            <h2 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 tracking-tight drop-shadow-sm">Admin Dashboard</h2>
-            <p className="text-gray-500 font-medium mt-1">Central command for user identities and platform inventory.</p>
+            <h2 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 tracking-tight drop-shadow-sm">Admin Control Center</h2>
+            <p className="text-gray-500 font-medium mt-1">Central command for user identities, catalog verification, and fleet tracking.</p>
           </div>
           <div className="w-full md:w-96 relative">
             <input 
               type="text" 
-              placeholder="Search by name, ID, or provider username..."
+              placeholder="Search by name, ID, or provider..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all"
@@ -204,12 +207,12 @@ const AdminDashboard = () => {
         </div>
 
         {/* Custom Tabs */}
-        <div className="flex space-x-2 bg-white/60 backdrop-blur-md p-1.5 rounded-2xl mb-8 overflow-x-auto w-fit max-w-full shadow-sm border border-white/50">
+        <div className="flex flex-wrap items-center gap-2 bg-white/60 backdrop-blur-md p-1.5 rounded-2xl mb-8 shadow-sm border border-white/50">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 whitespace-nowrap cursor-pointer ${
                 activeTab === tab.id 
                   ? 'bg-gray-900 text-white shadow-lg shadow-gray-900/20 transform scale-[1.02]' 
                   : 'text-gray-600 hover:text-gray-900 hover:bg-white/80'
@@ -223,6 +226,14 @@ const AdminDashboard = () => {
               )}
             </button>
           ))}
+          <button
+            onClick={() => navigate('/admin/track-products')}
+            className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-all duration-300 whitespace-nowrap shadow-sm group cursor-pointer ml-auto"
+            title="Open Live Fleet & Returns Logistics Tracker"
+          >
+            <span>Live Rental Fleet Tracker</span>
+            <span className="text-xs bg-indigo-600 text-white px-2 py-0.5 rounded-full font-black group-hover:translate-x-0.5 transition-transform">➔</span>
+          </button>
         </div>
 
         <div className="bg-white/80 backdrop-blur-2xl rounded-[2rem] shadow-2xl shadow-blue-900/5 border border-white overflow-hidden flex flex-col h-[800px] relative z-10">
@@ -293,10 +304,10 @@ const AdminDashboard = () => {
                       <div key={p._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-200 transition-all duration-300 overflow-hidden flex flex-col group">
                         <div className="h-48 relative overflow-hidden bg-gray-100">
                           <img 
-                            src={p.images?.[0] ? (p.images[0].startsWith('http') ? p.images[0] : `http://localhost:5024${p.images[0].startsWith('/') ? '' : '/'}${p.images[0]}`) : 'https://via.placeholder.com/400'} 
+                            src={p.frontImage ? resolveImg(p.frontImage) : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E`} 
                             alt="" 
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                          />
+                           onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-80"></div>
                           <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
                             <div>
@@ -514,12 +525,12 @@ const AdminDashboard = () => {
                           <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 block">{doc.docType}</span>
                           <div className="aspect-video bg-gray-200 rounded-xl overflow-hidden border border-gray-300 relative flex items-center justify-center">
                             <img 
-                              src={`http://localhost:5024${doc.url.startsWith('/') ? '' : '/'}${doc.url}`} 
+                              src={resolveImg(doc.url)} 
                               alt={doc.docType} 
                               className="w-full h-full object-cover"
-                            />
+                             onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                             <div 
-                              onClick={() => setPreviewImage(`http://localhost:5024${doc.url.startsWith('/') ? '' : '/'}${doc.url}`)}
+                              onClick={() => setPreviewImage(resolveImg(doc.url))}
                               className="absolute inset-0 bg-gray-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center cursor-pointer backdrop-blur-sm"
                             >
                               <div className="bg-white text-gray-900 font-semibold text-sm px-4 py-2 rounded-lg shadow-sm">View Full Screen</div>
@@ -577,10 +588,10 @@ const AdminDashboard = () => {
                     <h4 className="text-sm font-semibold text-gray-900 mb-6 pb-3 border-b border-gray-200">Product Images</h4>
                     <div className="grid grid-cols-2 gap-4">
                       {selectedProduct.images?.map((imgUrl, idx) => {
-                        const cleanUrl = imgUrl.startsWith('http') ? imgUrl : `http://localhost:5024${imgUrl.startsWith('/') ? '' : '/'}${imgUrl}`;
+                        const cleanUrl = resolveImg(imgUrl);
                         return (
                           <div key={idx} className="aspect-square bg-gray-200 rounded-xl overflow-hidden border border-gray-300 relative group">
-                            <img src={cleanUrl} alt="" className="w-full h-full object-cover" />
+                            <img src={cleanUrl} alt="" className="w-full h-full object-cover"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                             <div 
                               onClick={() => setPreviewImage(cleanUrl)}
                               className="absolute inset-0 bg-gray-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
@@ -642,7 +653,7 @@ const AdminDashboard = () => {
           >
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
-          <img src={previewImage} alt="Preview" className="max-w-full max-h-[90vh] rounded-xl object-contain shadow-2xl animate-slide-up" />
+          <img src={previewImage} alt="Preview" className="max-w-full max-h-[90vh] rounded-xl object-contain shadow-2xl animate-slide-up"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
         </div>
       )}
     </div>

@@ -12,7 +12,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['FOLLOW', 'PRODUCT_VERIFIED', 'PRODUCT_REJECTED', 'NEW_MESSAGE'],
+    enum: ['FOLLOW', 'PRODUCT_VERIFIED', 'PRODUCT_REJECTED', 'NEW_MESSAGE', 'PAYMENT_ALERT', 'BOOKING_UPDATE', 'REFUND_COMPLETED', 'PAYOUT_DISBURSED'],
     required: true
   },
   product: {

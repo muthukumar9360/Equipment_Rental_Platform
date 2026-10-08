@@ -46,6 +46,15 @@ const Register = () => {
   const [otherDocType, setOtherDocType] = useState('Passport');
   const [otherDocNumber, setOtherDocNumber] = useState('');
 
+  // Payment & Automated Refund Coordinates
+  const [upiId, setUpiId] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [confirmAccountNumber, setConfirmAccountNumber] = useState('');
+  const [ifscCode, setIfscCode] = useState('');
+  const [accountHolderName, setAccountHolderName] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [accountType, setAccountType] = useState('Savings');
+
   // Uploads
   const [files, setFiles] = useState({
     docFront: null,
@@ -68,6 +77,13 @@ const Register = () => {
     }, 500);
     return () => clearTimeout(delayDebounceFn);
   }, [username]);
+
+  // Auto-sync account holder name from legal name if unedited
+  useEffect(() => {
+    if (name && !accountHolderName) {
+      setAccountHolderName(name);
+    }
+  }, [name]);
 
   // Handlers
   const handleSendOtp = async (type) => {
@@ -148,12 +164,25 @@ const Register = () => {
       }
     }
     if (step === 5) {
+      if (!upiId && !accountNumber) {
+        return setErrorMsg('Please enter either your Bank Account details or UPI ID for automated deposit refunds and payouts.');
+      }
+      if (accountNumber) {
+        if (confirmAccountNumber && accountNumber !== confirmAccountNumber) {
+          return setErrorMsg('Bank account numbers do not match. Please verify your account number.');
+        }
+        if (!ifscCode || ifscCode.trim().length < 8) {
+          return setErrorMsg('Please enter a valid Bank IFSC code (e.g. HDFC0001234).');
+        }
+      }
+    }
+    if (step === 6) {
       if (!files.docFront || !files.panFront || !consent) {
         return setErrorMsg('Please complete document uploads and consent.');
       }
     }
 
-    if (step === 5) {
+    if (step === 6) {
       handleFinalSubmit();
     } else {
       setStep(step + 1);
@@ -181,13 +210,20 @@ const Register = () => {
       formData.append('otherDocType', otherDocType);
       if (otherDocNumber) formData.append('otherDocNumber', otherDocNumber);
 
+      if (upiId) formData.append('upiId', upiId.trim());
+      if (accountNumber) formData.append('accountNumber', accountNumber.trim());
+      if (ifscCode) formData.append('ifscCode', ifscCode.trim().toUpperCase());
+      if (accountHolderName) formData.append('accountHolderName', accountHolderName.trim());
+      if (bankName) formData.append('bankName', bankName.trim());
+      if (accountType) formData.append('accountType', accountType.trim());
+
       if (files.docFront) formData.append('docFront', files.docFront);
       if (files.panFront) formData.append('panFront', files.panFront);
       if (files.otherDocFront) formData.append('otherDocFront', files.otherDocFront);
 
       const { data } = await api.post('/auth/register', formData);
       setEquiporaId(data.equiporaId);
-      setStep(6);
+      setStep(7);
     } catch (error) {
       setErrorMsg(error.response?.data?.message || 'Submission failed');
     } finally {
@@ -195,7 +231,7 @@ const Register = () => {
     }
   };
 
-  const stepTitles = ["Account", "Verify", "Personal", "Docs", "Upload"];
+  const stepTitles = ["Account", "Verify", "Personal", "Docs", "Bank", "Upload"];
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
@@ -209,7 +245,7 @@ const Register = () => {
             src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80"
             alt="Premium Equipment"
             className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-overlay"
-          />
+           onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent"></div>
 
           <div className="relative z-10 flex flex-col justify-between p-12 xl:p-20 h-full w-full">
@@ -229,9 +265,9 @@ const Register = () => {
               </h2>
               <div className="flex items-center space-x-4 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10 inline-flex">
                 <div className="flex -space-x-3">
-                  <img className="w-10 h-10 rounded-full border-2 border-gray-900" src="https://i.pravatar.cc/100?img=12" alt="User" />
-                  <img className="w-10 h-10 rounded-full border-2 border-gray-900" src="https://i.pravatar.cc/100?img=32" alt="User" />
-                  <img className="w-10 h-10 rounded-full border-2 border-gray-900" src="https://i.pravatar.cc/100?img=52" alt="User" />
+                  <img className="w-10 h-10 rounded-full border-2 border-gray-900" src="https://i.pravatar.cc/100?img=12" alt="User"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
+                  <img className="w-10 h-10 rounded-full border-2 border-gray-900" src="https://i.pravatar.cc/100?img=32" alt="User"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
+                  <img className="w-10 h-10 rounded-full border-2 border-gray-900" src="https://i.pravatar.cc/100?img=52" alt="User"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                 </div>
                 <p className="text-gray-200 font-medium text-sm">Join <span className="font-bold text-white">10,000+</span> verified users.</p>
               </div>
@@ -258,20 +294,20 @@ const Register = () => {
             </div>
 
             {/* Progress Indicator */}
-            {step < 6 && (
+            {step < 7 && (
               <div className="mb-10 mt-5">
                 <div className="flex justify-between relative">
                   <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 rounded-full -z-10"></div>
-                  <div className="absolute top-1/2 left-0 h-1 bg-blue-600 -translate-y-1/2 rounded-full -z-10 transition-all duration-700" style={{ width: `${((step - 1) / 4) * 100}%` }}></div>
+                  <div className="absolute top-1/2 left-0 h-1 bg-blue-600 -translate-y-1/2 rounded-full -z-10 transition-all duration-700" style={{ width: `${((step - 1) / (stepTitles.length - 1)) * 100}%` }}></div>
 
-                  {[1, 2, 3, 4, 5].map(num => (
+                  {[1, 2, 3, 4, 5, 6].map(num => (
                     <div key={num} className="flex flex-col items-center relative">
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-500 ${step === num ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-50' :
+                      <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-500 ${step === num ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-50' :
                         step > num ? 'bg-green-500 text-white' : 'bg-white text-gray-400 border-2 border-gray-200'
                         }`}>
-                        {step > num ? <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg> : num}
+                        {step > num ? <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg> : num}
                       </div>
-                      <span className={`absolute -bottom-6 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider ${step >= num ? 'text-gray-900' : 'text-gray-400'}`}>
+                      <span className={`absolute -bottom-6 text-[8px] sm:text-[9.5px] font-bold uppercase tracking-wider ${step >= num ? 'text-gray-900' : 'text-gray-400'}`}>
                         {stepTitles[num - 1]}
                       </span>
                     </div>
@@ -419,10 +455,13 @@ const Register = () => {
             {step === 3 && (
               <form onSubmit={handleStepNext} className="space-y-6 animate-slide-up">
                 <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 shadow-sm">
-                  <h3 className="text-lg font-black text-gray-900 mb-4 flex items-center">
-                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2">1</span>
-                    Personal Details
-                  </h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-black text-gray-900 flex items-center">
+                      <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2 font-black">3</span>
+                      Personal Details
+                    </h3>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Step 3 of 6</span>
+                  </div>
 
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
@@ -466,20 +505,26 @@ const Register = () => {
                 <div className="flex space-x-4">
                   <button type="button" onClick={() => setStep(2)} className="px-6 py-4 bg-white border border-gray-200 text-gray-700 font-bold rounded-2xl hover:bg-gray-50 transition-colors">Back</button>
                   <button type="submit" className="flex-1 flex justify-center py-4 px-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-black shadow-md transform hover:-translate-y-0.5 transition-all">
-                    Continue to Documents
+                    Continue to Document Details
                   </button>
                 </div>
               </form>
             )}
 
-            {/* STEP 4: Document Details */}
+            {/* STEP 4: Document Details (KYC Number Verification) */}
             {step === 4 && (
               <form onSubmit={handleStepNext} className="space-y-6 animate-slide-up">
-                <div className="bg-gray-50 p-3 rounded-2xl border border-gray-200 shadow-sm">
-                  <h3 className="text-lg font-black text-gray-900 mb-4 flex items-center">
-                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2">2</span>
-                    Document Details
-                  </h3>
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-black text-gray-900 flex items-center">
+                      <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2 font-black">4</span>
+                      Document Details (KYC)
+                    </h3>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Step 4 of 6</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-4 font-medium">
+                    Provide your government identification numbers for identity verification.
+                  </p>
 
                   <div className="space-y-4">
                     <div>
@@ -491,8 +536,8 @@ const Register = () => {
                       <input type="text" required value={panNumber} onChange={e => setPanNumber(e.target.value.toUpperCase().slice(0, 10))} className="block w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium" placeholder="ABCDE1234F" />
                     </div>
                     <div className="flex space-x-3">
-                      <div className="w-1.5/3">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">Other Documents</label>
+                      <div className="w-1/3">
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Other Doc</label>
                         <div className="relative">
                           <select value={otherDocType} onChange={e => setOtherDocType(e.target.value)} className="appearance-none block w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium pr-10 cursor-pointer focus:ring-2 focus:ring-blue-500 transition-colors">
                             <option value="Passport">Passport</option>
@@ -515,28 +560,213 @@ const Register = () => {
                 <div className="flex space-x-4">
                   <button type="button" onClick={() => setStep(3)} className="px-6 py-4 bg-white border border-gray-200 text-gray-700 font-bold rounded-2xl hover:bg-gray-50 transition-colors">Back</button>
                   <button type="submit" className="flex-1 flex justify-center py-4 px-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-black shadow-md transform hover:-translate-y-0.5 transition-all">
-                    Continue to Uploads
+                    Continue to Bank Details
                   </button>
                 </div>
               </form>
             )}
 
-            {/* STEP 5: Document Uploads */}
+            {/* STEP 5: STANDALONE DEDICATED BANK DETAILS SECTION */}
             {step === 5 && (
-              <form onSubmit={handleStepNext} className="space-y-2 animate-slide-up">
-                <div className="bg-gray-50 p-3 rounded-2xl border border-gray-200 shadow-sm">
-                  <h3 className="text-lg font-black text-gray-900 mb-4 flex items-center">
-                    <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2">3</span>
-                    Document Uploads
-                  </h3>
+              <form onSubmit={handleStepNext} className="space-y-5 animate-slide-up">
+                <div className="bg-gray-50 p-5 rounded-3xl border border-gray-200 shadow-sm space-y-5">
+                  <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-lg shadow-md shadow-emerald-200">
+                        ₹
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-gray-900 tracking-tight">Bank &amp; Payout Details</h3>
+                        <p className="text-xs text-gray-500 font-medium">Dedicated section for payouts and automated refunds</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-black text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full uppercase tracking-wider">
+                      Step 5 of 6
+                    </span>
+                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Trust & Automation Banner */}
+                  <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-3.5 flex items-start space-x-3">
+                    <div className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-black mt-0.5">
+                      ✓
+                    </div>
+                    <div className="text-xs leading-relaxed text-emerald-900 font-medium">
+                      <span className="font-bold">Automated Razorpay Settlements:</span> Security deposits are refunded automatically to your UPI / Bank once product return is confirmed by the provider. Zero admin approval needed.
+                    </div>
+                  </div>
+
+                  {/* Part A: Bank Account Details */}
+                  <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-black uppercase text-gray-800 tracking-wider flex items-center">
+                        <svg className="w-4 h-4 mr-1.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                        Bank Account Information
+                      </h4>
+                      <div className="flex items-center space-x-2 text-xs">
+                        <label className="flex items-center cursor-pointer font-bold text-gray-600 text-xs">
+                          <input 
+                            type="radio" 
+                            name="accountType" 
+                            value="Savings" 
+                            checked={accountType === 'Savings'} 
+                            onChange={() => setAccountType('Savings')} 
+                            className="mr-1 text-blue-600 focus:ring-blue-500"
+                          />
+                          Savings
+                        </label>
+                        <label className="flex items-center cursor-pointer font-bold text-gray-600 text-xs">
+                          <input 
+                            type="radio" 
+                            name="accountType" 
+                            value="Current" 
+                            checked={accountType === 'Current'} 
+                            onChange={() => setAccountType('Current')} 
+                            className="mr-1 text-blue-600 focus:ring-blue-500"
+                          />
+                          Current
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Account Holder Name</label>
+                        <input 
+                          type="text" 
+                          value={accountHolderName} 
+                          onChange={e => setAccountHolderName(e.target.value)} 
+                          className="block w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500" 
+                          placeholder="As per bank passbook" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Bank Name</label>
+                        <input 
+                          type="text" 
+                          value={bankName} 
+                          onChange={e => setBankName(e.target.value)} 
+                          className="block w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500" 
+                          placeholder="e.g. HDFC / SBI / ICICI / Axis" 
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quick Bank Selector Pills */}
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {['HDFC Bank', 'State Bank of India', 'ICICI Bank', 'Axis Bank', 'Kotak Bank'].map(b => (
+                        <button
+                          key={b}
+                          type="button"
+                          onClick={() => setBankName(b)}
+                          className={`text-[11px] px-2.5 py-1 rounded-lg font-bold border transition-colors ${bankName === b ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'}`}
+                        >
+                          {b}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1">Account Number</label>
+                        <input 
+                          type="text" 
+                          value={accountNumber} 
+                          onChange={e => setAccountNumber(e.target.value.replace(/\D/g, ''))} 
+                          className="block w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 font-mono" 
+                          placeholder="00000000000" 
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-xs font-bold text-gray-700">Re-enter Account Number</label>
+                          {confirmAccountNumber && accountNumber && (
+                            <span className={`text-[10px] font-bold ${accountNumber === confirmAccountNumber ? 'text-emerald-600' : 'text-red-500'}`}>
+                              {accountNumber === confirmAccountNumber ? '✓ Matches' : '✗ Mismatch'}
+                            </span>
+                          )}
+                        </div>
+                        <input 
+                          type="text" 
+                          value={confirmAccountNumber} 
+                          onChange={e => setConfirmAccountNumber(e.target.value.replace(/\D/g, ''))} 
+                          className="block w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 font-mono" 
+                          placeholder="Re-type account number" 
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-gray-700">Bank IFSC Code</label>
+                        <span className="text-[10px] text-gray-400 font-medium">11-character code (e.g. HDFC0001234)</span>
+                      </div>
+                      <input 
+                        type="text" 
+                        value={ifscCode} 
+                        onChange={e => setIfscCode(e.target.value.toUpperCase().slice(0, 11))} 
+                        className="block w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 font-mono tracking-wider" 
+                        placeholder="HDFC0001234" 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Part B: UPI ID for Instant Deposit Refund */}
+                  <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-black uppercase text-gray-800 tracking-wider flex items-center">
+                        <span className="text-amber-500 mr-1.5 font-bold text-sm">⚡</span>
+                        UPI ID (Instant Razorpay Refund)
+                      </h4>
+                      <span className="text-[10px] font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full uppercase">
+                        Recommended
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500 font-medium">
+                      Receive rental security deposit refunds directly in Google Pay, PhonePe, Paytm, or BHIM instantly.
+                    </p>
+                    <input 
+                      type="text" 
+                      value={upiId} 
+                      onChange={e => setUpiId(e.target.value.trim().toLowerCase())} 
+                      className="block w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-500 font-mono" 
+                      placeholder="e.g. yourname@okhdfcbank or 9876543210@paytm" 
+                    />
+                  </div>
+                </div>
+
+                <div className="flex space-x-4">
+                  <button type="button" onClick={() => setStep(4)} className="px-6 py-4 bg-white border border-gray-200 text-gray-700 font-bold rounded-2xl hover:bg-gray-50 transition-colors">
+                    Back to Docs
+                  </button>
+                  <button type="submit" className="flex-1 flex justify-center py-4 px-4 bg-gray-900 text-white font-black rounded-2xl hover:bg-black shadow-md transform hover:-translate-y-0.5 transition-all">
+                    Continue to Document Uploads ➔
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* STEP 6: Document Uploads */}
+            {step === 6 && (
+              <form onSubmit={handleStepNext} className="space-y-4 animate-slide-up">
+                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-black text-gray-900 flex items-center">
+                      <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2 font-black">6</span>
+                      Document File Uploads
+                    </h3>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Step 6 of 6</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-4 font-medium">
+                    Upload clear photo/scan files of your documents for KYC verification.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="border-2 border-dashed border-gray-300 rounded-2xl p-4 text-center hover:bg-gray-100 transition-colors relative group bg-white">
                       <input type="file" required onChange={(e) => handleFileChange(e, 'docFront')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*,.pdf" />
                       <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center mb-2 transition-colors ${files.docFront ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-500'}`}>
                         {files.docFront ? <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg> : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>}
                       </div>
-                      <span className="text-sm font-bold text-gray-900 block">{files.docFront ? files.docFront.name : 'Aadhaar Front'}</span>
+                      <span className="text-sm font-bold text-gray-900 block truncate">{files.docFront ? files.docFront.name : 'Aadhaar Card Front'}</span>
                     </div>
 
                     <div className="border-2 border-dashed border-gray-300 rounded-2xl p-4 text-center hover:bg-gray-100 transition-colors relative group bg-white">
@@ -544,37 +774,39 @@ const Register = () => {
                       <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center mb-2 transition-colors ${files.panFront ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-500'}`}>
                         {files.panFront ? <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg> : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>}
                       </div>
-                      <span className="text-sm font-bold text-gray-900 block">{files.panFront ? files.panFront.name : 'PAN Card Front'}</span>
+                      <span className="text-sm font-bold text-gray-900 block truncate">{files.panFront ? files.panFront.name : 'PAN Card Front'}</span>
                     </div>
                   </div>
 
-                  <div className="border-2 border-dashed border-gray-300 rounded-2xl p-4 text-center hover:bg-gray-100 transition-colors relative group bg-white mt-2">
+                  <div className="border-2 border-dashed border-gray-300 rounded-2xl p-4 text-center hover:bg-gray-100 transition-colors relative group bg-white mt-3">
                     <input type="file" required onChange={(e) => handleFileChange(e, 'otherDocFront')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*,.pdf" />
                     <div className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center mb-2 transition-colors ${files.otherDocFront ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-500'}`}>
                       {files.otherDocFront ? <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg> : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>}
                     </div>
-                    <span className="text-sm font-bold text-gray-900 block">{files.otherDocFront ? files.otherDocFront.name : `Upload ${otherDocType}`}</span>
+                    <span className="text-sm font-bold text-gray-900 block truncate">{files.otherDocFront ? files.otherDocFront.name : `Upload ${otherDocType}`}</span>
                   </div>
                 </div>
 
                 <div className="flex items-start bg-gray-50 p-4 rounded-xl border border-gray-200">
                   <input type="checkbox" id="consent" required checked={consent} onChange={() => setConsent(!consent)} className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
                   <label htmlFor="consent" className="ml-3 block text-xs font-medium text-gray-600 leading-relaxed">
-                    I agree to the <span className="text-blue-600 font-bold">Terms of Service</span> and confirm all provided information is accurate and belongs to me.
+                    I agree to the <span className="text-blue-600 font-bold">Terms of Service</span> and confirm all provided personal, bank, and KYC details are accurate and belong to me.
                   </label>
                 </div>
 
                 <div className="flex space-x-4">
-                  <button type="button" onClick={() => setStep(4)} disabled={isLoading} className="px-6 py-4 bg-white border border-gray-200 text-gray-700 font-bold rounded-2xl hover:bg-gray-50 disabled:opacity-50 transition-colors">Back</button>
+                  <button type="button" onClick={() => setStep(5)} disabled={isLoading} className="px-6 py-4 bg-white border border-gray-200 text-gray-700 font-bold rounded-2xl hover:bg-gray-50 disabled:opacity-50 transition-colors">
+                    Back to Bank Details
+                  </button>
                   <button type="submit" disabled={isLoading} className="flex-1 flex justify-center py-4 px-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 shadow-md transform hover:-translate-y-0.5 transition-all disabled:opacity-50">
-                    {isLoading ? <Loader type="inline" text="Submitting..." /> : 'Submit Securely'}
+                    {isLoading ? <Loader type="inline" text="Submitting..." /> : 'Submit Application ➔'}
                   </button>
                 </div>
               </form>
             )}
 
-            {/* STEP 6: SUCCESS */}
-            {step === 6 && (
+            {/* STEP 7: SUCCESS */}
+            {step === 7 && (
               <div className="text-center py-6 animate-fade-in-up">
                 <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-50 border-4 border-green-100 mb-6 relative">
                   <svg className="h-10 w-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" /></svg>

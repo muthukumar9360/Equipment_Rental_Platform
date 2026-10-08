@@ -130,14 +130,43 @@ const ProductsPage = () => {
   }, {});
   const brands = metadata.brands.sort();
 
-  const availableSubCategories = metadata.subCategories.sort();
+  const subCategoriesMap = {
+    "Cameras & Lenses": ["DSLR", "Mirrorless", "Cinema", "Action Cams", "360 Cameras", "Lenses", "Tripods"],
+    "Cameras": ["DSLR", "Mirrorless", "Cinema", "Action Cams", "360 Cameras", "Lenses", "Tripods"],
+    "Drones & Aerial": ["Photography", "FPV Racing", "Enterprise", "Underwater", "Accessories"],
+    "Drones": ["Photography", "FPV Racing", "Enterprise", "Underwater", "Accessories"],
+    "Audio Equipment": ["Microphones", "Mixers", "Speakers", "Recorders", "Headphones", "PA Systems"],
+    "Audio Gear": ["Microphones", "Mixers", "Speakers", "Recorders", "Headphones", "PA Systems"],
+    "Power Tools": ["Drills", "Saws", "Generators", "Sanders", "Compressors", "Nail Guns"],
+    "Lighting & Studio": ["Continuous", "Strobes", "Modifiers", "Stands", "Backdrops"],
+    "Lighting": ["Continuous", "Strobes", "Modifiers", "Stands", "Backdrops"],
+    "Vehicles & Transport": ["Vans", "Trucks", "Trailers", "ATVs", "Utility Carts"],
+    "Vehicles": ["Vans", "Trucks", "Trailers", "ATVs", "Utility Carts"],
+    "IT & Computers": ["Laptops", "Desktops", "Monitors", "Networking", "Servers", "Tablets"],
+    "Event Supplies": ["Tents", "Tables", "Chairs", "Decorations", "Stages", "Heaters"],
+    "Camping & Outdoors": ["Tents", "Sleeping Bags", "Backpacks", "Cooking Gear", "Navigation"],
+    "Construction & Heavy": ["Excavators", "Loaders", "Scaffolding", "Concrete Mixers", "Jackhammers"],
+    "Medical Devices": ["Monitors", "Wheelchairs", "Beds", "Ventilators", "Mobility Scooters"],
+    "Sports & Fitness": ["Treadmills", "Weights", "Bicycles", "Kayaks", "Golf Clubs", "Surfboards"]
+  };
+
+  const availableSubCategories = selectedCategory 
+    ? subCategoriesMap[selectedCategory] || []
+    : metadata.subCategories.sort();
 
   const filteredProducts = products.filter(product => {
     const searchLower = appliedSearchTerm.toLowerCase();
     const matchesSearch = (product.name?.toLowerCase() || '').includes(searchLower) || 
                           (product.brand?.toLowerCase() || '').includes(searchLower);
-    const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
-    const matchesSubCategory = selectedSubCategory ? product.subCategory === selectedSubCategory : true;
+    const matchesCategory = selectedCategory 
+      ? (product.category === selectedCategory || 
+         product.category.toLowerCase().includes(selectedCategory.split(' ')[0].toLowerCase())) 
+      : true;
+      
+    const matchesSubCategory = selectedSubCategory 
+      ? (product.subCategory === selectedSubCategory || 
+         (product.subCategory && product.subCategory.toLowerCase().includes(selectedSubCategory.toLowerCase()))) 
+      : true;
     const matchesLocation = selectedLocation ? product.location === selectedLocation : true;
     const matchesPrice = product.pricePerDay <= maxPrice;
     const matchesTrust = product.trustScore >= minTrustScore;
@@ -404,10 +433,10 @@ const ProductsPage = () => {
                   </div>
                   
                   <img 
-                    src={product.images?.[0] || 'https://via.placeholder.com/600x400?text=No+Image'} 
+                    src={product.frontImage || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E`} 
                     alt={product.name}
                     className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
-                  />
+                   onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                   
                   {/* Verified Badge over image */}
                   {product.verificationStatus === 'Verified' && (

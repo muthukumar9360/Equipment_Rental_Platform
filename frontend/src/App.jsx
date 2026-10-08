@@ -10,12 +10,15 @@ import ProductsPage from './pages/ProductsPage';
 import ProviderPreview from './pages/ProviderPreview';
 import ProductDetails from './pages/ProductDetails';
 import AdminVerificationCenter from './pages/AdminVerificationCenter';
+import AdminTrackProduct from './pages/AdminTrackProduct';
 import RecentActivityPage from './pages/RecentActivityPage';
 import Profile from './pages/Profile';
 import AddProduct from './pages/AddProduct';
 import LikedProducts from './pages/LikedProducts';
 import SavedProducts from './pages/SavedProducts';
 import Messages from './pages/Messages';
+import CustomerSupport from './pages/CustomerSupport';
+import PaymentHistory from './pages/PaymentHistory';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Loader from './components/Loader';
@@ -37,12 +40,18 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/payments" element={<PaymentHistory />} />
+          <Route path="/support" element={<CustomerSupport />} />
+          <Route path="/customer-support" element={<CustomerSupport />} />
           <Route path="/history" element={<RecentActivityPage />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/add-product" element={<AddProduct />} />
           <Route path="/edit-product/:id" element={<AddProduct />} />
+          <Route path="/admin" element={<AdminVerificationCenter />} />
+          <Route path="/admin/dashboard" element={<AdminVerificationCenter />} />
           <Route path="/admin/verifications" element={<AdminVerificationCenter />} />
+          <Route path="/admin/track-products" element={<AdminTrackProduct />} />
           <Route path="/liked" element={<LikedProducts />} />
           <Route path="/saved" element={<SavedProducts />} />
           <Route path="/messages" element={<Messages />} />

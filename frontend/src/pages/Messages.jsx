@@ -20,34 +20,65 @@ const Messages = () => {
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
 
-  // If navigated from "Message" button, location.state might have receiverId, productId
+  // If navigated from "Message" button, location.state or query params have receiverId, productId
   useEffect(() => {
+    let isMounted = true;
     const init = async () => {
       try {
+        setLoading(true);
         const state = location.state;
-        if (state?.receiverId) {
-          // Start or get conversation
-          const { data } = await api.post('/messages/conversations', {
-            receiverId: state.receiverId,
-            productId: state.productId
-          });
-          setActiveConversation(data);
-          // clear state so refresh doesn't trigger again
-          navigate(location.pathname, { replace: true });
+        const searchParams = new URLSearchParams(location.search);
+        const targetReceiverId = state?.receiverId || searchParams.get('user') || searchParams.get('receiverId');
+        const targetProductId = state?.productId || searchParams.get('productId');
+
+        let createdOrFoundConv = null;
+
+        if (targetReceiverId && targetReceiverId !== user?._id) {
+          try {
+            // Start or get conversation with target user
+            const { data } = await api.post('/messages/conversations', {
+              receiverId: targetReceiverId,
+              productId: targetProductId
+            });
+            createdOrFoundConv = data;
+          } catch (postErr) {
+            console.error('Error starting conversation:', postErr);
+          }
         }
-        
+
         // Load all conversations
         const { data: convs } = await api.get('/messages/conversations');
-        setConversations(convs);
-        
+        if (!isMounted) return;
+
+        let allConvs = Array.isArray(convs) ? [...convs] : [];
+
+        if (createdOrFoundConv) {
+          const index = allConvs.findIndex(c => c._id === createdOrFoundConv._id);
+          if (index !== -1) {
+            allConvs[index] = createdOrFoundConv;
+          } else {
+            allConvs.unshift(createdOrFoundConv);
+          }
+          setConversations(allConvs);
+          setActiveConversation(createdOrFoundConv);
+        } else {
+          setConversations(allConvs);
+          if (allConvs.length > 0 && !activeConversation) {
+            setActiveConversation(allConvs[0]);
+          }
+        }
       } catch (err) {
         console.error(err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
     init();
-  }, [location.state, navigate]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [location.state, location.search, user?._id]);
 
   // Load messages for active conversation
   useEffect(() => {
@@ -82,8 +113,6 @@ const Messages = () => {
     const handleReceiveMessage = (data) => {
       // If message belongs to active conversation
       if (activeConversation && activeConversation._id === data.conversationId) {
-        // We could fetch messages again or just append if we have the full message object.
-        // For simplicity, refetch.
         api.get(`/messages/${data.conversationId}`).then(res => {
           setMessages(res.data);
           scrollToBottom();
@@ -123,10 +152,11 @@ const Messages = () => {
       setNewMessage('');
       scrollToBottom();
 
-      const receiverId = activeConversation.participants.find(p => p._id !== user._id)._id;
+      const otherParticipant = activeConversation.participants?.find(p => (p._id?.toString() || p._id) !== (user._id?.toString() || user._id));
+      const receiverId = otherParticipant?._id;
 
       // Emit to socket
-      if (socket) {
+      if (socket && receiverId) {
         socket.emit('send_message', {
           receiverId,
           conversationId: activeConversation._id,
@@ -165,17 +195,17 @@ const Messages = () => {
         </div>
         
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 custom-scrollbar">
-          {conversations.filter(c => c.lastMessage).length === 0 ? (
+          {conversations.filter(c => c.lastMessage || (activeConversation && c._id === activeConversation._id)).length === 0 ? (
             <div className="p-6 text-center flex flex-col items-center justify-center h-full opacity-60">
               <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
                  <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
               </div>
               <p className="text-gray-600 font-bold">No messages yet.</p>
-              <p className="text-gray-400 text-sm mt-1">Start a conversation from a provider's profile.</p>
+              <p className="text-gray-400 text-sm mt-1">Start a conversation from a provider's profile or active rental.</p>
             </div>
           ) : (
-            conversations.filter(c => c.lastMessage).map(conv => {
-              const otherUser = conv.participants.find(p => p._id !== user._id);
+            conversations.filter(c => c.lastMessage || (activeConversation && c._id === activeConversation._id)).map(conv => {
+              const otherUser = conv.participants?.find(p => (p._id?.toString() || p._id) !== (user._id?.toString() || user._id)) || conv.participants?.[0];
               const unread = conv.unreadCounts?.[user._id] || 0;
               const isActive = activeConversation?._id === conv._id;
 
@@ -188,9 +218,9 @@ const Messages = () => {
                   <div className="relative shrink-0">
                     <div className="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden border-[3px] border-white shadow-sm transition-transform duration-300 group-hover:scale-105">
                       {otherUser?.profileImage ? (
-                        <img src={otherUser.profileImage} alt="" className="w-full h-full object-cover"/>
+                        <img src={otherUser.profileImage} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500 font-black text-xl">{otherUser?.name?.charAt(0)}</div>
+                        <div className="w-full h-full flex items-center justify-center text-gray-500 font-black text-xl">{otherUser?.name?.charAt(0) || otherUser?.username?.charAt(0) || 'U'}</div>
                       )}
                     </div>
                     {unread > 0 && (
@@ -202,7 +232,7 @@ const Messages = () => {
                   
                   <div className="grow overflow-hidden">
                     <div className="flex justify-between items-baseline mb-1.5">
-                      <h3 className="font-bold text-gray-900 truncate pr-2 group-hover:text-blue-600 transition-colors">{otherUser?.username || otherUser?.name}</h3>
+                      <h3 className="font-bold text-gray-900 truncate pr-2 group-hover:text-blue-600 transition-colors">{otherUser?.name || otherUser?.username || 'User'}</h3>
                       <span className="text-[10px] text-gray-400 font-bold shrink-0 uppercase tracking-wider">
                         {new Date(conv.updatedAt).toLocaleDateString() === new Date().toLocaleDateString() 
                           ? new Date(conv.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
@@ -210,7 +240,7 @@ const Messages = () => {
                       </span>
                     </div>
                     <p className={`text-sm truncate ${unread > 0 ? 'text-gray-900 font-black' : 'text-gray-500 font-medium'}`}>
-                      {conv.lastMessage || '\u00A0'}
+                      {conv.lastMessage || 'Send a message to start conversation...'}
                     </p>
                   </div>
                 </div>
@@ -226,31 +256,38 @@ const Messages = () => {
           <>
             {/* Chat Header */}
             <div className="p-5 px-8 bg-white/80 backdrop-blur-xl border-b border-gray-200/50 flex items-center gap-5 shrink-0 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] z-20">
-              <div className="w-12 h-12 rounded-[1rem] bg-gray-200 overflow-hidden shrink-0 border-2 border-white shadow-sm">
-                {activeConversation.participants.find(p => p._id !== user._id)?.profileImage ? (
-                  <img src={activeConversation.participants.find(p => p._id !== user._id).profileImage} alt="" className="w-full h-full object-cover"/>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-500 font-black text-lg">
-                    {activeConversation.participants.find(p => p._id !== user._id)?.name?.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div>
-                <h3 className="font-black text-gray-900 text-lg">
-                  {activeConversation.participants.find(p => p._id !== user._id)?.username}
-                </h3>
-                {activeConversation.product ? (
-                  <p className="text-xs text-blue-600 font-bold flex items-center mt-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5 animate-pulse"></span>
-                    Inquiring about: {activeConversation.product.name}
-                  </p>
-                ) : (
-                  <p className="text-xs text-green-500 font-bold flex items-center mt-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
-                    Online
-                  </p>
-                )}
-              </div>
+              {(() => {
+                const activeOther = activeConversation.participants?.find(p => (p._id?.toString() || p._id) !== (user._id?.toString() || user._id)) || activeConversation.participants?.[0];
+                return (
+                  <>
+                    <div className="w-12 h-12 rounded-[1rem] bg-gray-200 overflow-hidden shrink-0 border-2 border-white shadow-sm">
+                      {activeOther?.profileImage ? (
+                        <img src={activeOther.profileImage} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500 font-black text-lg">
+                          {activeOther?.name?.charAt(0) || activeOther?.username?.charAt(0) || 'U'}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-black text-gray-900 text-lg">
+                        {activeOther?.name || activeOther?.username || 'Verified Member'}
+                      </h3>
+                      {activeConversation.product ? (
+                        <p className="text-xs text-blue-600 font-bold flex items-center mt-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5 animate-pulse"></span>
+                          Inquiring about: {activeConversation.product.name}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-green-500 font-bold flex items-center mt-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                          Online
+                        </p>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
             {/* Chat Messages */}

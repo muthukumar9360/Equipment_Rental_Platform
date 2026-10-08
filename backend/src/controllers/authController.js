@@ -138,7 +138,8 @@ const registerUser = async (req, res) => {
     const { 
       username, name, email, phone, password, 
       dob, gender, state, district, city, line1, pincode,
-      primaryDocumentType, aadhaarNumber, panNumber, otherDocType, otherDocNumber
+      primaryDocumentType, aadhaarNumber, panNumber, otherDocType, otherDocNumber,
+      upiId, accountNumber, ifscCode, accountHolderName, bankName, accountType
     } = req.body;
 
     const userExists = await User.findOne({ $or: [{ email }, { username }] });
@@ -176,6 +177,14 @@ const registerUser = async (req, res) => {
       role: 'user',
       dob, gender,
       address: { state, district, city, line1, pincode },
+      upiId: upiId ? upiId.trim() : undefined,
+      bankDetails: {
+        accountNumber: accountNumber ? accountNumber.trim() : undefined,
+        ifscCode: ifscCode ? ifscCode.trim() : undefined,
+        accountHolderName: accountHolderName ? accountHolderName.trim() : (name || undefined),
+        bankName: bankName ? bankName.trim() : undefined,
+        accountType: accountType ? accountType.trim() : 'Savings'
+      },
       equiporaId,
       kycStatus: 'PENDING_REVIEW',
       kycData: {

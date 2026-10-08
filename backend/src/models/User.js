@@ -24,6 +24,16 @@ const userSchema = new mongoose.Schema({
     pincode: { type: String }
   },
 
+  // Payment, Payout & Refund Coordinates
+  upiId: { type: String, trim: true },
+  bankDetails: {
+    accountNumber: { type: String, trim: true },
+    ifscCode: { type: String, trim: true },
+    accountHolderName: { type: String, trim: true },
+    bankName: { type: String, trim: true },
+    accountType: { type: String, trim: true, default: 'Savings' }
+  },
+
   // Profile & Social Features
   profileImage: { type: String }, // URL from cloudinary
   bio: { type: String, maxlength: 500 },

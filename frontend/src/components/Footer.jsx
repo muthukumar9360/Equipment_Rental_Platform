@@ -17,22 +17,22 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold text-gray-900 mb-4">Quick Links</h3>
             <ul className="space-y-3 text-sm text-gray-500">
-              <li><Link to="/" className="hover:text-blue-600 transition-colors">About Us</Link></li>
-              <li><Link to="/" className="hover:text-blue-600 transition-colors">Investor Relations</Link></li>
-              <li><Link to="/" className="hover:text-blue-600 transition-colors">We're Hiring</Link></li>
-              <li><Link to="/" className="hover:text-blue-600 transition-colors">Customer Care</Link></li>
-              <li><Link to="/" className="hover:text-blue-600 transition-colors">Free Listing</Link></li>
+              <li><Link to="/products" className="hover:text-blue-600 transition-colors">Browse All Gear</Link></li>
+              <li><Link to="/support" className="hover:text-blue-600 transition-colors">Customer Support & AI</Link></li>
+              <li><Link to="/add-product" className="hover:text-blue-600 transition-colors">List Your Equipment</Link></li>
+              <li><Link to="/payments" className="hover:text-blue-600 transition-colors">Payments & Escrow</Link></li>
+              <li><Link to="/history" className="hover:text-blue-600 transition-colors">Recent Activity</Link></li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-semibold text-gray-900 mb-4">Categories</h3>
             <ul className="space-y-3 text-sm text-gray-500">
-              <li><Link to="/" className="hover:text-blue-600 transition-colors">Cameras & Lenses</Link></li>
-              <li><Link to="/" className="hover:text-blue-600 transition-colors">Drones</Link></li>
-              <li><Link to="/" className="hover:text-blue-600 transition-colors">Audio & Mics</Link></li>
-              <li><Link to="/" className="hover:text-blue-600 transition-colors">Lighting</Link></li>
-              <li><Link to="/" className="hover:text-blue-600 transition-colors">Accessories</Link></li>
+              <li><Link to="/products?category=Cameras%20%26%20Lenses" className="hover:text-blue-600 transition-colors">Cameras & Lenses</Link></li>
+              <li><Link to="/products?category=Drones" className="hover:text-blue-600 transition-colors">Drones</Link></li>
+              <li><Link to="/products?category=Audio%20%26%20Mics" className="hover:text-blue-600 transition-colors">Audio & Mics</Link></li>
+              <li><Link to="/products?category=Lighting" className="hover:text-blue-600 transition-colors">Lighting</Link></li>
+              <li><Link to="/products?category=Accessories" className="hover:text-blue-600 transition-colors">Accessories</Link></li>
             </ul>
           </div>
 

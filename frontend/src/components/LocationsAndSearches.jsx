@@ -26,7 +26,7 @@ const LocationCard = ({ city, imageUrl }) => {
               transform transition-transform duration-500
               group-hover:scale-110
             "
-          />
+           onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
         </div>
 
         {/* Text (Right Side) */}

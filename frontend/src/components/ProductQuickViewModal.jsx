@@ -20,8 +20,8 @@ const ProductQuickViewModal = ({ isOpen, onClose, product }) => {
   if (!isOpen || !product) return null;
 
   // Ensure we have an array of at least 4 images for the thumbnails
-  const images = product.images && product.images.length > 0 
-    ? product.images 
+  const images = [product.frontImage, product.backImage, product.leftImage, product.rightImage].filter(Boolean) && [product.frontImage, product.backImage, product.leftImage, product.rightImage].filter(Boolean).length > 0 
+    ? [product.frontImage, product.backImage, product.leftImage, product.rightImage].filter(Boolean) 
     : [
         'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=600&q=80',
         'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80',
@@ -32,7 +32,7 @@ const ProductQuickViewModal = ({ isOpen, onClose, product }) => {
   // If product has less than 4 images, pad it with placeholders for the design
   const displayImages = [...images];
   while (displayImages.length < 4) {
-    displayImages.push('https://via.placeholder.com/600x400?text=No+Image');
+    displayImages.push(`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E`);
   }
 
   const handleShowDates = () => {
@@ -61,7 +61,7 @@ const ProductQuickViewModal = ({ isOpen, onClose, product }) => {
                 activeImageIndex === idx ? 'border-white scale-110 shadow-xl' : 'border-white/60 hover:border-white hover:opacity-100 opacity-85'
               }`}
             >
-              <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
+              <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
             </button>
           ))}
         </div>
@@ -84,7 +84,7 @@ const ProductQuickViewModal = ({ isOpen, onClose, product }) => {
                 src={displayImages[activeImageIndex]} 
                 alt={product.name} 
                 className="w-full h-full object-cover transition-opacity duration-300"
-              />
+               onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
             </div>
           </div>
 

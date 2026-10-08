@@ -36,6 +36,9 @@ const Profile = () => {
   // Edit State
   const [editName, setEditName] = useState('');
   const [editBio, setEditBio] = useState('');
+  const [editUpiId, setEditUpiId] = useState('');
+  const [editAccountNumber, setEditAccountNumber] = useState('');
+  const [editIfscCode, setEditIfscCode] = useState('');
   const [editImage, setEditImage] = useState(null);
   const [editImagePreview, setEditImagePreview] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -61,6 +64,9 @@ const Profile = () => {
       if (isOwnProfile) {
         setEditName(data.name || '');
         setEditBio(data.bio || '');
+        setEditUpiId(data.upiId || user?.upiId || '');
+        setEditAccountNumber(data.bankDetails?.accountNumber || user?.bankDetails?.accountNumber || '');
+        setEditIfscCode(data.bankDetails?.ifscCode || user?.bankDetails?.ifscCode || '');
         const productsRes = await api.get('/products/my-products');
         setUserProducts(productsRes.data);
       } else {
@@ -147,6 +153,9 @@ const Profile = () => {
       const formData = new FormData();
       formData.append('name', editName);
       formData.append('bio', editBio);
+      formData.append('upiId', editUpiId);
+      formData.append('bankDetails[accountNumber]', editAccountNumber);
+      formData.append('bankDetails[ifscCode]', editIfscCode);
       if (editImage) {
         formData.append('profileImage', editImage);
       }
@@ -291,7 +300,7 @@ const Profile = () => {
                 <div className="w-36 h-36 md:w-44 md:h-44 rounded-[2rem] bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 p-1.5 shadow-2xl">
                   <div className="w-full h-full bg-white rounded-[1.8rem] overflow-hidden relative">
                     {profileData.profileImage ? (
-                      <img src={profileData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={profileData.profileImage} alt="Profile" className="w-full h-full object-cover"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400 text-5xl font-black">
                         {profileData.name.charAt(0)}
@@ -555,10 +564,10 @@ const Profile = () => {
                   >
                     {/* Full Card Image Background */}
                     <img 
-                      src={product.images?.[0] || 'https://via.placeholder.com/400'} 
+                      src={product.frontImage || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E`} 
                       alt={product.name} 
                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    />
+                     onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                     
                     {/* Gradient Overlays */}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent"></div>
@@ -706,7 +715,7 @@ const Profile = () => {
               <div className="flex flex-col items-center">
                 <div className="w-24 h-24 rounded-full bg-gray-100 mb-4 overflow-hidden border border-gray-200 relative group cursor-pointer shadow-inner">
                   {(editImagePreview || profileData.profileImage) ? (
-                    <img src={editImagePreview || profileData.profileImage} alt="Preview" className="w-full h-full object-cover group-hover:opacity-50 transition-opacity" />
+                    <img src={editImagePreview || profileData.profileImage} alt="Preview" className="w-full h-full object-cover group-hover:opacity-50 transition-opacity"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-400 text-3xl font-black">{profileData.name.charAt(0)}</div>
                   )}
@@ -737,6 +746,43 @@ const Profile = () => {
                   placeholder="Write something about yourself..."
                   className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 text-gray-900 font-medium focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all resize-none shadow-inner"
                 ></textarea>
+              </div>
+
+              {/* UPI and Bank coordinates */}
+              <div className="p-4 bg-blue-50/70 border border-blue-200 rounded-2xl space-y-3">
+                <p className="text-xs font-black uppercase tracking-wider text-blue-900">⚡ Automated Refund &amp; Payout Coordinates</p>
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">UPI ID (For Instant Security Deposit Refund)</label>
+                  <input
+                    type="text"
+                    value={editUpiId}
+                    onChange={e => setEditUpiId(e.target.value)}
+                    placeholder="e.g. user@okaxis / mobile@upi"
+                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1">Account Number</label>
+                    <input
+                      type="text"
+                      value={editAccountNumber}
+                      onChange={e => setEditAccountNumber(e.target.value)}
+                      placeholder="Bank A/C Number"
+                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 mb-1">IFSC Code</label>
+                    <input
+                      type="text"
+                      value={editIfscCode}
+                      onChange={e => setEditIfscCode(e.target.value.toUpperCase())}
+                      placeholder="HDFC0001234"
+                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
               </div>
 
               <button 
@@ -782,7 +828,7 @@ const Profile = () => {
                     {profileData.followers?.map(f => (
                       <Link to={`/profile/${f._id}`} key={f._id} onClick={() => setActiveModal(null)} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors">
                         <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-200">
-                          {f.profileImage ? <img src={f.profileImage} alt="" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-lg">{f.name?.charAt(0)}</div>}
+                          {f.profileImage ? <img src={f.profileImage} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} /> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-lg">{f.name?.charAt(0)}</div>}
                         </div>
                         <div className="grow overflow-hidden">
                           <p className="font-bold text-gray-900 text-sm truncate">{f.username}</p>
@@ -803,7 +849,7 @@ const Profile = () => {
                     {profileData.following?.map(f => (
                       <Link to={`/profile/${f._id}`} key={f._id} onClick={() => setActiveModal(null)} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors">
                         <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden shrink-0 border border-gray-200">
-                          {f.profileImage ? <img src={f.profileImage} alt="" className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-lg">{f.name?.charAt(0)}</div>}
+                          {f.profileImage ? <img src={f.profileImage} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} /> : <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-lg">{f.name?.charAt(0)}</div>}
                         </div>
                         <div className="grow overflow-hidden">
                           <p className="font-bold text-gray-900 text-sm truncate">{f.username}</p>

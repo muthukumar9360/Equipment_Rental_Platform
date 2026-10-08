@@ -95,7 +95,7 @@ const RecentActivityPage = () => {
                         className="group bg-white/80 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.15)] transition-all duration-500 transform hover:-translate-y-2 cursor-pointer"
                       >
                         <div className="h-58 relative overflow-hidden p-5 pb-0">
-                          <img src={item.images?.[0] || 'https://via.placeholder.com/400'} alt={item.name} className="w-full h-full object-cover rounded-[2rem] transform group-hover:scale-105 transition-transform duration-700 shadow-sm" />
+                          <img src={item.frontImage || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E`} alt={item.name} className="w-full h-full object-cover rounded-[2rem] transform group-hover:scale-105 transition-transform duration-700 shadow-sm"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                         </div>
                         
                         <div className="p-8">

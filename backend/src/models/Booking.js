@@ -32,6 +32,22 @@ const bookingSchema = new mongoose.Schema({
     paymentSettled: { type: Boolean, default: false }
   },
   
+  paymentId: { type: String },
+  paymentStatus: { type: String, enum: ['Pending', 'Paid', 'Refunded'], default: 'Pending' },
+
+  // Automated Refund to Client UPI
+  refundStatus: { type: String, enum: ['None', 'Initiated', 'Completed'], default: 'None' },
+  refundAmount: { type: Number, default: 0 },
+  refundTxnId: { type: String },
+  refundUpiId: { type: String },
+  refundDate: { type: Date },
+
+  // Automated Payout to Provider
+  providerPayoutStatus: { type: String, enum: ['None', 'Initiated', 'Completed'], default: 'None' },
+  providerPayoutAmount: { type: Number, default: 0 },
+  providerPayoutTxnId: { type: String },
+  providerPayoutDate: { type: Date },
+  
   // To link inspections
   handoverInspectionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Inspection' },
   returnInspectionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Inspection' }

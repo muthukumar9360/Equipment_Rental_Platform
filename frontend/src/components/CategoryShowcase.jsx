@@ -175,7 +175,7 @@ const CategoryShowcase = () => {
                       src={sub.image}
                       alt={sub.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
+                     onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                   </div>
                   <div className="p-2 bg-gray-900 text-white">
                     <h3 className="text-sm font-bold text-center group-hover:text-blue-400 transition-colors">
@@ -266,7 +266,7 @@ const CategoryShowcase = () => {
                             src={cat.mainImage}
                             alt={cat.mainCategory}
                             className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
-                          />
+                           onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                         <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col items-center justify-end">
@@ -289,7 +289,7 @@ const CategoryShowcase = () => {
                             src={sub.image}
                             alt={sub.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
+                           onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
                           <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300"></div>
                         </div>
                         <div className="p-4 bg-white text-center flex-1 flex flex-col justify-center">

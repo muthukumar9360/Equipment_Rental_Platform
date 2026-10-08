@@ -1,12 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middlewares/authMiddleware');
-const paymentController = require('../controllers/paymentController');
+const { createOrder, verifyPayment, refundPayment } = require('../controllers/paymentController');
 
-// Route: POST /api/payment/create-order
-router.post('/create-order', protect, paymentController.createOrder);
-
-// Route: POST /api/payment/verify
-router.post('/verify', protect, paymentController.verifyPayment);
+router.post('/orders', protect, createOrder);
+router.post('/verify', protect, verifyPayment);
+router.post('/refund', protect, refundPayment);
 
 module.exports = router;

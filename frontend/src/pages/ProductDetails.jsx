@@ -39,7 +39,37 @@ const ProductDetails = () => {
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('18:00');
   const [calendarKey, setCalendarKey] = useState(0);
+  const [bookedRanges, setBookedRanges] = useState([]);
   const calendarRef = useRef(null);
+
+  useEffect(() => {
+    if (id) {
+      api.get(`/bookings/product/${id}/booked-dates`)
+        .then(res => setBookedRanges(res.data || []))
+        .catch(err => console.error("Error fetching booked dates:", err));
+    }
+  }, [id]);
+
+  const isDateBooked = (date) => {
+    const time = new Date(date).setHours(0, 0, 0, 0);
+    return bookedRanges.some(r => {
+      const start = new Date(r.startDate).setHours(0, 0, 0, 0);
+      const end = new Date(r.endDate).setHours(23, 59, 59, 999);
+      return time >= start && time <= end;
+    });
+  };
+
+  const isRangeOverlappingBooked = (range) => {
+    if (!range || range.length !== 2 || !range[0] || !range[1]) return false;
+    const [start, end] = range;
+    const startTime = new Date(start).setHours(0, 0, 0, 0);
+    const endTime = new Date(end).setHours(23, 59, 59, 999);
+    return bookedRanges.some(r => {
+      const rStart = new Date(r.startDate).setHours(0, 0, 0, 0);
+      const rEnd = new Date(r.endDate).setHours(23, 59, 59, 999);
+      return startTime <= rEnd && endTime >= rStart;
+    });
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -158,7 +188,8 @@ const ProductDetails = () => {
   if (loading) return <Loader type="fullpage" text="Loading immersive experience..." />;
   if (!product) return <div className="text-center mt-20 text-red-500 font-bold">Product not found</div>;
 
-  const resolveUrl = (url) => url ? (url.startsWith('http') ? url : `http://localhost:5024${url.startsWith('/') ? '' : '/'}${url}`) : null;
+  const BACKEND_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5024/api').replace('/api', '');
+  const resolveUrl = (url) => url ? (url.startsWith('http') ? url : `${BACKEND_BASE}${url.startsWith('/') ? '' : '/'}${url}`) : null;
 
   const getDays = () => {
     if (dates && dates.length === 2 && dates[0] && dates[1]) {
@@ -175,6 +206,16 @@ const ProductDetails = () => {
   // Basic TN coordinate
   const mapCenter = [11.1271, 78.6569];
 
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleRentRequest = async () => {
     if (!user) {
       alert("Please login to rent this product.");
@@ -184,14 +225,62 @@ const ProductDetails = () => {
     
     if (!dates || dates.length !== 2) return;
 
+    if (isRangeOverlappingBooked(dates)) {
+      alert("The selected dates overlap with an already booked reservation. Please choose available dates.");
+      return;
+    }
+
+    const res = await loadRazorpayScript();
+    if (!res) {
+      alert("Razorpay SDK failed to load. Are you online?");
+      return;
+    }
+
     try {
-      await api.post('/bookings', {
+      const bookingRes = await api.post('/bookings', {
         productId: product._id,
         startDate: dates[0],
         endDate: dates[1]
       });
-      alert('Rental request sent to provider! Awaiting approval.');
-      navigate('/dashboard');
+      const booking = bookingRes.data;
+
+      const orderRes = await api.post('/payment/orders', {
+        amount: totalPrice + product.securityDeposit,
+        receipt: booking._id
+      });
+      const order = orderRes.data;
+
+      const options = {
+        key: 'rzp_test_RFxhjAiTxwrpAJ',
+        amount: order.amount,
+        currency: order.currency,
+        name: 'Equipora Rentals',
+        description: `Rent ${product.name}`,
+        order_id: order.id,
+        handler: async function (response) {
+          try {
+            await api.post('/payment/verify', {
+              ...response,
+              bookingId: booking._id
+            });
+            alert('Payment Successful! Rental request sent to provider.');
+            navigate('/dashboard');
+          } catch (error) {
+            alert('Payment Verification Failed');
+          }
+        },
+        prefill: {
+          name: user.name,
+          email: user.email,
+          contact: user.phone
+        },
+        theme: {
+          color: '#2563EB'
+        }
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to submit rental request');
     }
@@ -298,6 +387,21 @@ const ProductDetails = () => {
           background-color: #111827;
           border-radius: 50%;
         }
+
+        .booked-date-tile {
+          background-color: #fee2e2 !important;
+          color: #dc2626 !important;
+          text-decoration: line-through !important;
+          cursor: not-allowed !important;
+          font-weight: 800 !important;
+          border-radius: 12px !important;
+          opacity: 0.8 !important;
+        }
+        .booked-date-tile:hover {
+          transform: none !important;
+          box-shadow: none !important;
+          background-color: #fee2e2 !important;
+        }
         
         /* Advanced Range Styling */
         .react-calendar__tile--active,
@@ -354,35 +458,35 @@ const ProductDetails = () => {
           {/* Front Image (Massive Square Hero) */}
           <div className="col-span-2 row-span-2 relative rounded-2xl md:rounded-r-none md:rounded-bl-2xl md:rounded-tl-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
             <img 
-              src={resolveUrl(product.frontImage) || resolveUrl(product.images?.[0]) || 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=1200&q=80'} 
+              src={resolveUrl(product.frontImage) || resolveUrl(product.frontImage) || 'https://images.unsplash.com/photo-1518398046578-8cca57782e17?auto=format&fit=crop&w=1200&q=80'} 
               alt="Front View" 
               className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105"
-            />
+             onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
           </div>
           
           {/* Back Image (Square) */}
           <div className="hidden md:block col-span-1 row-span-1 relative overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
-            <img src={resolveUrl(product.backImage) || resolveUrl(product.images?.[1]) || 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80'} alt="Back View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+            <img src={resolveUrl(product.backImage) || resolveUrl(product.images?.[1]) || 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80'} alt="Back View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
           </div>
 
           {/* Left Image (Square) */}
           <div className="hidden md:block col-span-1 row-span-1 relative overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
-            <img src={resolveUrl(product.leftImage) || resolveUrl(product.images?.[2]) || 'https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=600&q=80'} alt="Left View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+            <img src={resolveUrl(product.leftImage) || resolveUrl(product.images?.[2]) || 'https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=600&q=80'} alt="Left View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
           </div>
 
           {/* Right Image (Top Right Corner Square) */}
           <div className="hidden md:block col-span-1 row-span-1 relative md:rounded-tr-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
-            <img src={resolveUrl(product.rightImage) || resolveUrl(product.images?.[3]) || 'https://images.unsplash.com/photo-1513251703273-db987b50875e?auto=format&fit=crop&w=600&q=80'} alt="Right View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+            <img src={resolveUrl(product.rightImage) || resolveUrl(product.images?.[3]) || 'https://images.unsplash.com/photo-1513251703273-db987b50875e?auto=format&fit=crop&w=600&q=80'} alt="Right View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
           </div>
 
           {/* Top Image (Square) */}
           <div className="hidden md:block col-span-1 row-span-1 relative overflow-hidden bg-gray-100 group shadow-sm cursor-pointer aspect-square" onClick={() => setIsGalleryOpen(true)}>
-            <img src={resolveUrl(product.topImage) || resolveUrl(product.images?.[4]) || 'https://images.unsplash.com/photo-1513251703273-db987b50875e?auto=format&fit=crop&w=600&q=80'} alt="Top View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+            <img src={resolveUrl(product.topImage) || resolveUrl(product.images?.[4]) || 'https://images.unsplash.com/photo-1513251703273-db987b50875e?auto=format&fit=crop&w=600&q=80'} alt="Top View" className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
           </div>
 
           {/* Bottom Image (Bottom Right Wide Rectangle) */}
           <div className="hidden md:block col-span-2 row-span-1 relative md:rounded-br-2xl overflow-hidden bg-gray-100 group shadow-sm cursor-pointer h-full" onClick={() => setIsGalleryOpen(true)}>
-            <img src={resolveUrl(product.bottomImage) || resolveUrl(product.images?.[5]) || 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=600&q=80'} alt="Bottom View" className="absolute inset-0 w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" />
+            <img src={resolveUrl(product.bottomImage) || resolveUrl(product.images?.[5]) || 'https://images.unsplash.com/photo-1514214246283-d427a95c5d2f?auto=format&fit=crop&w=600&q=80'} alt="Bottom View" className="absolute inset-0 w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24px' font-weight='600' fill='%239ca3af'%3EImage Unavailable%3C/text%3E%3C/svg%3E"; }} />
             <button 
               onClick={(e) => { e.stopPropagation(); setIsGalleryOpen(true); }}
               className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-md text-gray-900 font-bold px-4 py-2 text-sm rounded-xl shadow-lg border border-white/20 hover:bg-white hover:scale-105 transition-all"
@@ -453,6 +557,14 @@ const ProductDetails = () => {
               >
                 <svg className={`w-4 h-4 ${isSaved ? 'fill-current' : 'fill-none stroke-current stroke-2'}`} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
                 {isSaved ? 'Saved' : 'Watch Later'}
+              </button>
+
+              <button 
+                onClick={() => navigate(`/preview/${product._id}`)}
+                className="px-4 py-2 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 hover:border-purple-300 text-purple-700 font-bold rounded-xl transition-all shadow-sm text-sm flex items-center gap-1.5 cursor-pointer hover:shadow-md"
+                title="Compare all providers offering this equipment model"
+              >
+                <span>🔄</span> Compare Providers
               </button>
               
               <div className="text-right ml-auto sm:ml-4 border-l border-gray-200 pl-4 hidden sm:block">
@@ -589,26 +701,54 @@ const ProductDetails = () => {
           {/* Sticky Booking Widget */}
           <div className="bg-white border border-gray-200 rounded-3xl p-6 lg:p-8 sticky top-28 shadow-xl animate-fade-in-up">
             
-            <div className="flex items-end justify-between mb-8 pb-6 border-b border-gray-200">
+            <div className="flex items-end justify-between mb-5 pb-6 border-b border-gray-200">
               <div>
                 <span className="text-4xl font-extrabold text-gray-900">₹{product.pricePerDay}</span>
                 <span className="text-gray-500 ml-2 font-medium">/ day</span>
               </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-3">
 
             {/* Calendar Component */}
             <div ref={calendarRef} className="mb-4 bg-gray-50 rounded-2xl p-4 border border-gray-100 shadow-inner">
               <Calendar 
                 key={calendarKey}
-                onChange={setDates} 
+                onChange={(selectedDates) => {
+                  if (Array.isArray(selectedDates) && selectedDates.length === 2) {
+                    if (isRangeOverlappingBooked(selectedDates)) {
+                      alert("Selected rental period overlaps with already booked dates. Please choose available dates.");
+                      setDates(null);
+                      setCalendarKey(prev => prev + 1);
+                      return;
+                    }
+                  }
+                  setDates(selectedDates);
+                }} 
                 selectRange={true} 
                 allowPartialRange={true}
                 showNeighboringMonth={false}
                 value={dates} 
                 minDate={new Date()} 
+                tileDisabled={({ date, view }) => view === 'month' && isDateBooked(date)}
+                tileClassName={({ date, view }) => {
+                  if (view === 'month' && isDateBooked(date)) {
+                    return 'booked-date-tile';
+                  }
+                  return null;
+                }}
               />
+              {/* Availability Legend */}
+              <div className="flex items-center justify-between text-xs mt-3 pt-3 border-t border-gray-200/60 font-bold">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-red-100 border border-red-400"></span>
+                  <span className="text-red-600">Already Booked</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 rounded-full bg-blue-100 border border-blue-500"></span>
+                  <span className="text-blue-600">Available</span>
+                </div>
+              </div>
             </div>
 
             {/* Time Selection Component */}
@@ -653,16 +793,16 @@ const ProductDetails = () => {
               </button>
             )}
 
-            <div className="mt-0 pt-4 border-t border-gray-200">
-              <div className="flex justify-between text-gray-600 mb-3 text-sm">
+            <div className="mt-0">
+              <div className="flex justify-between text-gray-600 text-sm">
                 <span>₹{product.pricePerDay} x {getDays()} days</span>
                 <span>₹{totalPrice}</span>
               </div>
-              <div className="flex justify-between text-gray-600 mb-3 text-sm">
+              <div className="flex justify-between text-gray-600 text-sm">
                 <span>Security Deposit</span>
                 <span>₹{product.securityDeposit}</span>
               </div>
-              <div className="flex justify-between text-gray-900 font-bold text-xl mt-1 pt-4 border-t border-gray-200 border-dashed">
+              <div className="flex justify-between text-gray-900 font-bold text-xl mt-2">
                 <span>Total</span>
                 <span className="text-blue-600">₹{totalPrice + product.securityDeposit}</span>
               </div>

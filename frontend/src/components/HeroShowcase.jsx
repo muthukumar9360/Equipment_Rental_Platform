@@ -102,7 +102,7 @@ const HeroShowcase = ({ products = [] }) => {
         {/* Background image with reduced opacity */}
         <div
           className="absolute inset-0 bg-cover bg-center transition-all duration-500"
-          style={{ backgroundImage: `url(${slides[current]?.images?.[0] || 'https://via.placeholder.com/900'})` }}
+          style={{ backgroundImage: `url(${slides[current]?.frontImage || 'https://via.placeholder.com/900'})` }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
